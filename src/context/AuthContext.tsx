@@ -59,36 +59,86 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ============================================================
-  // LOGIN - Real API Call
+  // LOGIN - Mock Authentication (Frontend Demo)
   // ============================================================
+  // In production, this would call the real backend API
+  // For demo purposes, we simulate authentication
 
   const login = useCallback(async (email: string, password: string) => {
     try {
       setIsLoading(true);
 
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Mock user database
+      const mockUsers: Record<string, { password: string; user: User }> = {
+        'admin@platform.com': {
+          password: 'ChangeThisPassword123!',
+          user: {
+            id: 'user-sa-1',
+            email: 'admin@platform.com',
+            name: 'Super Admin',
+            role: 'SUPER_ADMIN',
+            hotelId: null,
+            isActive: true,
+          },
         },
-        body: JSON.stringify({ email, password }),
-      });
+        'owner@tajpalace.com': {
+          password: 'Owner@123',
+          user: {
+            id: 'user-own-1',
+            email: 'owner@tajpalace.com',
+            name: 'Rajesh Kumar',
+            role: 'OWNER',
+            hotelId: 'hotel-1',
+            isActive: true,
+          },
+        },
+        'kitchen@tajpalace.com': {
+          password: 'Kitchen@123',
+          user: {
+            id: 'user-kit-1',
+            email: 'kitchen@tajpalace.com',
+            name: 'Chef Anil',
+            role: 'KITCHEN',
+            hotelId: 'hotel-1',
+            isActive: true,
+          },
+        },
+        'waiter@tajpalace.com': {
+          password: 'Waiter@123',
+          user: {
+            id: 'user-wait-1',
+            email: 'waiter@tajpalace.com',
+            name: 'Suresh',
+            role: 'WAITER',
+            hotelId: 'hotel-1',
+            isActive: true,
+          },
+        },
+      };
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return { success: false, error: data.error || 'Login failed' };
+      // Validate credentials
+      const userRecord = mockUsers[email];
+      if (!userRecord || userRecord.password !== password) {
+        return { success: false, error: 'Invalid email or password' };
       }
 
-      const { token: newToken, user: userData } = data.data;
+      if (!userRecord.user.isActive) {
+        return { success: false, error: 'Account is deactivated' };
+      }
 
-      // Store in session storage (not localStorage for better security)
-      sessionStorage.setItem('auth_token', newToken);
-      sessionStorage.setItem('auth_user', JSON.stringify(userData));
+      // Generate mock JWT token
+      const mockToken = `mock_jwt_${userRecord.user.id}_${Date.now()}`;
+
+      // Store in session storage
+      sessionStorage.setItem('auth_token', mockToken);
+      sessionStorage.setItem('auth_user', JSON.stringify(userRecord.user));
 
       // Update state
-      setToken(newToken);
-      setUser(userData);
+      setToken(mockToken);
+      setUser(userRecord.user);
 
       return { success: true };
     } catch (error: any) {
