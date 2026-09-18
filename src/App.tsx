@@ -42,16 +42,17 @@ function App() {
             <Route path="/customer/:hotelId" element={<CustomerOrderPage />} />
             <Route path="/customer/demo" element={<Navigate to="/customer/hotel-1?table=table-1&token=ZGVtbw==" replace />} />
 
-            {/* Super Admin Routes */}
+            {/* Super Admin Routes - Protected & Secret */}
             <Route
-              path="/admin"
+              path="/platform/*"
               element={
                 <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
                   <DashboardLayout />
                 </ProtectedRoute>
               }
             >
-              <Route index element={<AdminHotelsPage />} />
+              <Route path="dashboard" element={<AdminHotelsPage />} />
+              <Route path="hotels" element={<AdminHotelsPage />} />
               <Route path="subscriptions" element={<AdminHotelsPage />} />
               <Route path="analytics" element={<AdminHotelsPage />} />
             </Route>

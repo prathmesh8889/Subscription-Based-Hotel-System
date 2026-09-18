@@ -19,6 +19,15 @@ import staffRoutes from './routes/staff';
 // Import database
 import { testDatabaseConnection } from './config/database';
 
+// Import admin security middleware
+import { 
+  ipWhitelist, 
+  adminLoginRateLimit, 
+  adminAccessLogger, 
+  honeypotDetection,
+  adminSessionSecurity 
+} from './middleware/adminSecurity';
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -68,7 +77,17 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
-app.use('/api/platform', platformRoutes);
+
+// Admin routes with enhanced security
+app.use('/api/platform', 
+  honeypotDetection,        // Detect suspicious probes
+  ipWhitelist,              // IP whitelist (if configured)
+  adminAccessLogger,        // Log all admin access
+  adminSessionSecurity,     // Additional session security
+  platformRoutes
+);
+
+// Staff routes
 app.use('/api/staff', staffRoutes);
 
 // 404 handler

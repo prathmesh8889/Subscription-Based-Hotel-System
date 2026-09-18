@@ -10,6 +10,7 @@ import {
   changePassword,
 } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
+import { adminLoginRateLimit } from '../middleware/adminSecurity';
 import rateLimit from 'express-rate-limit';
 
 const router = express.Router();
@@ -26,7 +27,9 @@ const authLimiter = rateLimit({
 
 // Public routes
 router.post('/register', authLimiter, register);
-router.post('/login', authLimiter, login);
+
+// Login with enhanced security for admin attempts
+router.post('/login', authLimiter, adminLoginRateLimit, login);
 
 // Protected routes
 router.get('/me', authenticateToken, getCurrentUser);
