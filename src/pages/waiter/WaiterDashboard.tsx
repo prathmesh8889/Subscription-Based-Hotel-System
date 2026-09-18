@@ -2,9 +2,10 @@
 // Waiter Dashboard - Order Management & Billing
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Order, OrderStatus, PaymentMethod, CartItem, MenuItem } from '../../types';
 import {
   ClipboardList, Receipt, Plus, CheckCircle2,
@@ -14,13 +15,34 @@ import {
 export function WaiterDashboard() {
   const { user } = useAuth();
   const { getHotelOrders, getHotelTables, getHotelMenu, updateOrderStatus, updatePaymentStatus, createOrder } = useData();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const hotelId = user?.hotel_id || '';
   const orders = getHotelOrders(hotelId);
   const tables = getHotelTables(hotelId);
   const menuItems = getHotelMenu(hotelId);
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'billing' | 'new-order'>('orders');
+  // Sync tab with URL path
+  const getTabFromPath = (): 'orders' | 'billing' | 'new-order' => {
+    if (location.pathname.endsWith('/billing')) return 'billing';
+    if (location.pathname.endsWith('/orders')) return 'orders';
+    return 'orders';
+  };
+
+  const [activeTab, setActiveTab] = useState<'orders' | 'billing' | 'new-order'>(getTabFromPath());
+
+  // Update tab when URL changes
+  useEffect(() => {
+    setActiveTab(getTabFromPath());
+  }, [location.pathname]);
+
+  const handleTabChange = (tab: 'orders' | 'billing' | 'new-order') => {
+    setActiveTab(tab);
+    if (tab === 'billing') navigate('/waiter/billing');
+    else if (tab === 'orders') navigate('/waiter/orders');
+    else navigate('/waiter');
+  };
   const [selectedTable, setSelectedTable] = useState<string>('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [billingOrder, setBillingOrder] = useState<Order | null>(null);
@@ -57,7 +79,7 @@ export function WaiterDashboard() {
     createOrder(hotelId, selectedTable, cart);
     setCart([]);
     setSelectedTable('');
-    setActiveTab('orders');
+    handleTabChange('orders');
   };
 
   const processPayment = (orderId: string, method: PaymentMethod) => {
@@ -78,7 +100,7 @@ export function WaiterDashboard() {
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
         <button
-          onClick={() => setActiveTab('orders')}
+          onClick={() => handleTabChange('orders')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
             activeTab === 'orders' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
           }`}
@@ -87,7 +109,7 @@ export function WaiterDashboard() {
           Active Orders ({activeOrders.length})
         </button>
         <button
-          onClick={() => setActiveTab('billing')}
+          onClick={() => handleTabChange('billing')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
             activeTab === 'billing' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
           }`}
@@ -96,7 +118,7 @@ export function WaiterDashboard() {
           Billing ({unpaidOrders.length})
         </button>
         <button
-          onClick={() => setActiveTab('new-order')}
+          onClick={() => handleTabChange('new-order')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
             activeTab === 'new-order' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
           }`}
@@ -157,7 +179,7 @@ export function WaiterDashboard() {
                       )}
                       {order.status === 'SERVED' && order.payment_status === 'UNPAID' && (
                         <button
-                          onClick={() => { setBillingOrder(order); setActiveTab('billing'); }}
+                          onClick={() => { setBillingOrder(order); handleTabChange('billing'); }}
                           className="flex-1 flex items-center justify-center gap-1 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600"
                         >
                           <Receipt size={14} />

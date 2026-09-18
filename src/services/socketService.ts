@@ -41,6 +41,7 @@ class SocketService {
   private listeners: Map<SocketEvent, SocketListener[]> = new Map();
   private rooms: Map<string, SocketRoom> = new Map();
   private currentRoom: string | null = null;
+  private currentUserId: string | null = null;
   private connected: boolean = false;
   private eventLog: SocketEventData[] = [];
   private maxLogSize = 100;
@@ -50,6 +51,7 @@ class SocketService {
   // ============================================================
   
   connect(userId: string, hotelId: string): void {
+    this.currentUserId = userId;
     // Simulate connection delay
     setTimeout(() => {
       this.connected = true;
@@ -93,13 +95,15 @@ class SocketService {
 
   disconnect(): void {
     this.connected = false;
-    if (this.currentRoom) {
+    if (this.currentRoom && this.currentUserId) {
       const room = this.rooms.get(this.currentRoom);
       if (room) {
-        // Remove from room members
-        room.members = room.members.filter(m => m !== this.currentRoom);
+        // Remove current user from room members
+        room.members = room.members.filter(m => m !== this.currentUserId);
       }
     }
+    this.currentRoom = null;
+    this.currentUserId = null;
     this.logEvent('connection_status', { status: 'disconnected' });
   }
 

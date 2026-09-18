@@ -13,12 +13,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
-import { Order, OrderStatus } from '../../types';
+import { Order, OrderStatus, MenuItem } from '../../types';
 import { socketService, SocketEventData, startOrderSimulation, stopOrderSimulation } from '../../services/socketService';
 import {
   ChefHat, Clock, CheckCircle2, Flame, Bell, Volume2, VolumeX,
-  Wifi, WifiOff, Radio, Activity, AlertCircle, Play, Pause,
-  Zap, Timer
+  Wifi, WifiOff, Radio, Activity, Play, Pause, Timer
 } from 'lucide-react';
 
 export function KitchenDashboardRealtime() {
@@ -43,57 +42,15 @@ export function KitchenDashboardRealtime() {
   const readyOrders = allOrders.filter(o => o.status === 'READY');
 
   const ordersEndRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const soundEnabledRef = useRef(soundEnabled);
 
-  // ============================================================
-  // SOCKET.IO CONNECTION
-  // ============================================================
+  // Keep ref in sync with state
   useEffect(() => {
-    if (!hotelId || !user) return;
-
-    // Connect to socket room
-    socketService.connect(user.id, hotelId);
-
-    // Listen for connection status
-    const unsubConnect = socketService.on('connection_status', (data) => {
-      setIsConnected(data.payload.status === 'connected');
-      setConnectionRoom(data.payload.room || '');
-    });
-
-    // Listen for new orders (real-time!)
-    const unsubNewOrder = socketService.on('new_order', (data) => {
-      setNewOrderFlash(true);
-      setTimeout(() => setNewOrderFlash(false), 3000);
-      
-      // Play notification sound
-      if (soundEnabled) {
-        playNotificationSound();
-      }
-    });
-
-    // Listen for status changes
-    const unsubStatus = socketService.on('order_status_changed', (data) => {
-      // Status changes are handled through the data context
-    });
-
-    return () => {
-      unsubConnect();
-      unsubNewOrder();
-      unsubStatus();
-      socketService.disconnect();
-    };
-  }, [hotelId, user, soundEnabled]);
-
-  // Update event log periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setEventLog(socketService.getEventLog());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
 
   // ============================================================
-  // NOTIFICATION SOUND
+  // NOTIFICATION SOUND (defined BEFORE useEffect that uses it)
   // ============================================================
   const playNotificationSound = useCallback(() => {
     // Create a simple beep using Web Audio API
@@ -126,6 +83,54 @@ export function KitchenDashboardRealtime() {
   }, []);
 
   // ============================================================
+  // SOCKET.IO CONNECTION
+  // ============================================================
+  useEffect(() => {
+    if (!hotelId || !user) return;
+
+    // Connect to socket room
+    socketService.connect(user.id, hotelId);
+
+    // Listen for connection status
+    const unsubConnect = socketService.on('connection_status', (data) => {
+      setIsConnected(data.payload.status === 'connected');
+      setConnectionRoom(data.payload.room || '');
+    });
+
+    // Listen for new orders (real-time!)
+    // Uses ref for soundEnabled to avoid reconnection on toggle
+    const unsubNewOrder = socketService.on('new_order', (data) => {
+      setNewOrderFlash(true);
+      setTimeout(() => setNewOrderFlash(false), 3000);
+      
+      // Play notification sound (uses ref to avoid stale closure)
+      if (soundEnabledRef.current) {
+        playNotificationSound();
+      }
+    });
+
+    // Listen for status changes
+    const unsubStatus = socketService.on('order_status_changed', (data) => {
+      // Status changes are handled through the data context
+    });
+
+    return () => {
+      unsubConnect();
+      unsubNewOrder();
+      unsubStatus();
+      socketService.disconnect();
+    };
+  }, [hotelId, user, playNotificationSound]);
+
+  // Update event log periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEventLog(socketService.getEventLog());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ============================================================
   // ORDER SIMULATION (Demo)
   // ============================================================
   const toggleSimulation = () => {
@@ -139,13 +144,18 @@ export function KitchenDashboardRealtime() {
       }));
 
       startOrderSimulation(hotelId, availableTables, availableItems, (newOrder) => {
-        // Add order to data context
-        const order = createOrder(hotelId, newOrder.table_id, 
-          newOrder.items.map(item => ({
-            menu_item: menuItems.find(m => m.id === item.menu_item_id)!,
-            quantity: item.quantity,
-          }))
-        );
+        // Add order to data context - with null safety
+        const cartItems = newOrder.items
+          .map(item => {
+            const menuItem = menuItems.find(m => m.id === item.menu_item_id);
+            if (!menuItem) return null;
+            return { menu_item: menuItem, quantity: item.quantity };
+          })
+          .filter((item): item is { menu_item: MenuItem; quantity: number } => item !== null);
+        
+        if (cartItems.length > 0) {
+          createOrder(hotelId, newOrder.table_id, cartItems);
+        }
       });
       setSimulationActive(true);
     }

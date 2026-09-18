@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 import { PLAN_CONFIG, PlanType, Hotel } from '../../types';
-import { Building2, Check, X, CreditCard, Users, Calendar, MoreVertical, Search } from 'lucide-react';
+import { Building2, Check, X, CreditCard, MoreVertical, Search } from 'lucide-react';
 
 export function AdminHotelsPage() {
   const { hotels, updateHotel, tables, orders } = useData();

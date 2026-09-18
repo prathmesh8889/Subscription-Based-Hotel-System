@@ -136,10 +136,10 @@ export function CustomerOrderPage() {
             <h3 className="font-semibold text-gray-800 mb-4">Order Status</h3>
             <div className="space-y-4">
               {[
-                { status: 'PENDING', label: 'Order Received', icon: CheckCircle2, color: 'green' },
-                { status: 'PREPARING', label: 'Being Prepared', icon: ChefHat, color: 'blue' },
-                { status: 'READY', label: 'Ready to Serve', icon: UtensilsCrossed, color: 'amber' },
-                { status: 'SERVED', label: 'Served', icon: CheckCircle2, color: 'green' },
+                { status: 'PENDING', label: 'Order Received', icon: CheckCircle2, activeBg: 'bg-green-100', activeText: 'text-green-500' },
+                { status: 'PREPARING', label: 'Being Prepared', icon: ChefHat, activeBg: 'bg-blue-100', activeText: 'text-blue-500' },
+                { status: 'READY', label: 'Ready to Serve', icon: UtensilsCrossed, activeBg: 'bg-amber-100', activeText: 'text-amber-500' },
+                { status: 'SERVED', label: 'Served', icon: CheckCircle2, activeBg: 'bg-green-100', activeText: 'text-green-500' },
               ].map((step, idx) => {
                 const statusOrder = ['PENDING', 'PREPARING', 'READY', 'SERVED'];
                 const currentIdx = statusOrder.indexOf(currentOrder.status);
@@ -149,9 +149,9 @@ export function CustomerOrderPage() {
                 return (
                   <div key={step.status} className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      isActive ? `bg-${step.color}-100` : 'bg-gray-100'
+                      isActive ? step.activeBg : 'bg-gray-100'
                     }`}>
-                      <step.icon size={16} className={isActive ? `text-${step.color}-500` : 'text-gray-400'} />
+                      <step.icon size={16} className={isActive ? step.activeText : 'text-gray-400'} />
                     </div>
                     <div className="flex-1">
                       <p className={`text-sm font-medium ${isActive ? 'text-gray-800' : 'text-gray-400'}`}>

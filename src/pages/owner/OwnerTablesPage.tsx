@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 import { QRCodeSVG } from 'qrcode.react';
+import { generateQRToken, generateQRUrl } from '../../services/qrTokenService';
 import { Plus, QrCode, Download, X, Printer, Table2 } from 'lucide-react';
 
 export function OwnerTablesPage() {
@@ -40,12 +41,12 @@ export function OwnerTablesPage() {
     }
   };
 
-  // Generate QR URL with secure session token
+  // Generate QR URL with secure session token using the QR token service
   const getQRUrl = (tableId: string, qrToken: string) => {
-    const baseUrl = window.location.origin;
-    // In production, this would be a signed JWT with expiry
-    const sessionToken = btoa(`${tableId}:${qrToken}:${Date.now()}`);
-    return `${baseUrl}/customer/${hotel?.id}?table=${tableId}&token=${sessionToken}`;
+    if (!hotel) return '';
+    // Use the secure JWT-based token service
+    const token = generateQRToken(hotel.id, tableId);
+    return generateQRUrl(hotel.id, tableId, token);
   };
 
   const selectedTableData = tables.find(t => t.id === selectedTable);

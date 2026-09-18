@@ -74,7 +74,6 @@ export function QRManagementPage() {
     navigator.clipboard.writeText(text);
   };
 
-  const selectedTable = tables.find(t => t.id === selectedTableId);
   const tokenInfo = generatedToken ? decodeTokenInfo(generatedToken) : null;
   const qrUrl = generatedToken && hotel && selectedTableId
     ? generateQRUrl(hotel.id, selectedTableId, generatedToken)

@@ -31,6 +31,7 @@ const TOKEN_EXPIRY_HOURS = 4;
 // ============================================================
 function generateSignature(payload: string): string {
   // Simple hash simulation - in production use crypto.createHmac('sha256', secret)
+  // IMPORTANT: Must be deterministic - same input always produces same output
   let hash = 0;
   const combined = payload + QR_SECRET;
   for (let i = 0; i < combined.length; i++) {
@@ -38,7 +39,13 @@ function generateSignature(payload: string): string {
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
-  return Math.abs(hash).toString(36) + Date.now().toString(36);
+  // Use a secondary hash for longer signature (still deterministic)
+  let hash2 = 5381;
+  for (let i = 0; i < combined.length; i++) {
+    hash2 = ((hash2 << 5) + hash2) + combined.charCodeAt(i);
+    hash2 = hash2 & hash2;
+  }
+  return Math.abs(hash).toString(36) + Math.abs(hash2).toString(36);
 }
 
 // ============================================================
