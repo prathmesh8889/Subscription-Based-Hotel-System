@@ -11,6 +11,7 @@ import {
   Clock, AlertTriangle, IndianRupee
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { LiveActivityFeed } from '../../components/LiveActivityFeed';
 
 export function OwnerDashboard() {
   const { user } = useAuth();
@@ -192,6 +193,9 @@ export function OwnerDashboard() {
           )}
         </div>
       </div>
+
+      {/* Live Activity Feed */}
+      <LiveActivityFeed />
 
       {/* Plan Usage */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">

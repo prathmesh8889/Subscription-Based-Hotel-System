@@ -17,7 +17,8 @@ import { OwnerDashboard } from './pages/owner/OwnerDashboard';
 import { OwnerMenuPage } from './pages/owner/OwnerMenuPage';
 import { OwnerTablesPage } from './pages/owner/OwnerTablesPage';
 import { QRManagementPage } from './pages/owner/QRManagementPage';
-import { OwnerStaffPage } from './pages/owner/OwnerStaffPage';
+import { OwnerStaffManagement } from './pages/owner/OwnerStaffManagement';
+import { OwnerBilling } from './pages/owner/OwnerBilling';
 import { OwnerOrdersPage } from './pages/owner/OwnerOrdersPage';
 import { OwnerReportsPage } from './pages/owner/OwnerReportsPage';
 import { KitchenDashboardRealtime } from './pages/kitchen/KitchenDashboardRealtime';
@@ -64,7 +65,8 @@ function App() {
               <Route path="menu" element={<OwnerMenuPage />} />
               <Route path="tables" element={<OwnerTablesPage />} />
               <Route path="qr" element={<QRManagementPage />} />
-              <Route path="staff" element={<OwnerStaffPage />} />
+              <Route path="staff" element={<OwnerStaffManagement />} />
+              <Route path="billing" element={<OwnerBilling />} />
               <Route path="orders" element={<OwnerOrdersPage />} />
               <Route path="reports" element={<OwnerReportsPage />} />
             </Route>

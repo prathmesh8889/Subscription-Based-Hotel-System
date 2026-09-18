@@ -42,6 +42,7 @@ export function DashboardLayout() {
           { to: '/owner/qr', icon: QrCode, label: 'QR Codes' },
           { to: '/owner/staff', icon: Users, label: 'Staff' },
           { to: '/owner/orders', icon: ClipboardList, label: 'Orders' },
+          { to: '/owner/billing', icon: CreditCard, label: 'Billing' },
           { to: '/owner/reports', icon: Receipt, label: 'Reports' },
         ];
       case 'KITCHEN':
