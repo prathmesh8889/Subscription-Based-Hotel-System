@@ -9,7 +9,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import { Download, Calendar, TrendingUp, IndianRupee, Receipt } from 'lucide-react';
+import { Download, TrendingUp, IndianRupee, Receipt } from 'lucide-react';
 
 export function OwnerReportsPage() {
   const { user } = useAuth();

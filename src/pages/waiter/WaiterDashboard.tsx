@@ -47,7 +47,11 @@ export function WaiterDashboard() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [billingOrder, setBillingOrder] = useState<Order | null>(null);
 
-  const activeOrders = orders.filter(o => o.status !== 'SERVED');
+  // Active orders include all non-completed orders AND served-but-unpaid orders
+  // (waiter needs to see served orders to generate bills)
+  const activeOrders = orders.filter(o => 
+    o.status !== 'SERVED' || o.payment_status === 'UNPAID'
+  );
   const readyOrders = orders.filter(o => o.status === 'READY');
   const unpaidOrders = orders.filter(o => o.payment_status === 'UNPAID' && o.status === 'SERVED');
 

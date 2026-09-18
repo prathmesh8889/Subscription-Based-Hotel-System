@@ -2,7 +2,7 @@
 // Owner - Tables & QR Code Management
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '../../context/DataContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { generateQRToken, generateQRUrl } from '../../services/qrTokenService';
@@ -18,6 +18,25 @@ export function OwnerTablesPage() {
   const [newTableCapacity, setNewTableCapacity] = useState('4');
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [addError, setAddError] = useState('');
+  const [qrRefreshKey, setQrRefreshKey] = useState(0);
+
+  // Memoize QR tokens so they don't regenerate on every render
+  const qrTokens = useMemo(() => {
+    if (!hotel) return {};
+    const tokens: Record<string, string> = {};
+    tables.forEach(table => {
+      tokens[table.id] = generateQRToken(hotel.id, table.id);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return tokens;
+  }, [hotel, tables.length, qrRefreshKey]);
+
+  // Generate QR URL with secure session token using the QR token service
+  const getQRUrl = (tableId: string) => {
+    if (!hotel) return '';
+    const token = qrTokens[tableId] || generateQRToken(hotel.id, tableId);
+    return generateQRUrl(hotel.id, tableId, token);
+  };
 
   const handleAddTable = () => {
     if (!hotel || !newTableNumber) return;
@@ -39,14 +58,6 @@ export function OwnerTablesPage() {
     } else {
       setAddError(result.error || 'Failed to add table');
     }
-  };
-
-  // Generate QR URL with secure session token using the QR token service
-  const getQRUrl = (tableId: string, qrToken: string) => {
-    if (!hotel) return '';
-    // Use the secure JWT-based token service
-    const token = generateQRToken(hotel.id, tableId);
-    return generateQRUrl(hotel.id, tableId, token);
   };
 
   const selectedTableData = tables.find(t => t.id === selectedTable);
@@ -116,7 +127,7 @@ export function OwnerTablesPage() {
               {/* Mini QR Preview */}
               <div className="flex items-center justify-center p-3 bg-gray-50 rounded-lg mb-3">
                 <QRCodeSVG
-                  value={getQRUrl(table.id, table.qr_token)}
+                  value={getQRUrl(table.id)}
                   size={80}
                   level="M"
                 />
@@ -214,14 +225,14 @@ export function OwnerTablesPage() {
 
             <div className="bg-gray-50 rounded-xl p-6 mb-4">
               <QRCodeSVG
-                value={getQRUrl(selectedTableData.id, selectedTableData.qr_token)}
+                value={getQRUrl(selectedTableData.id)}
                 size={200}
                 level="H"
               />
             </div>
 
             <p className="text-xs text-gray-500 mb-4 break-all">
-              {getQRUrl(selectedTableData.id, selectedTableData.qr_token)}
+              {getQRUrl(selectedTableData.id)}
             </p>
 
             <div className="flex gap-2">

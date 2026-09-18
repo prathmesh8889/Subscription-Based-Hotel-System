@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
 import { OrderStatus } from '../../types';
-import { Search, Filter, Clock } from 'lucide-react';
+import { Search, Clock } from 'lucide-react';
 
 export function OwnerOrdersPage() {
   const { user } = useAuth();
