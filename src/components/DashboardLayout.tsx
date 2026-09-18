@@ -38,14 +38,15 @@ export function DashboardLayout() {
         return [
           { to: '/owner', icon: LayoutDashboard, label: 'Dashboard' },
           { to: '/owner/menu', icon: UtensilsCrossed, label: 'Menu' },
-          { to: '/owner/tables', icon: Table2, label: 'Tables & QR' },
+          { to: '/owner/tables', icon: Table2, label: 'Tables' },
+          { to: '/owner/qr', icon: QrCode, label: 'QR Codes' },
           { to: '/owner/staff', icon: Users, label: 'Staff' },
           { to: '/owner/orders', icon: ClipboardList, label: 'Orders' },
           { to: '/owner/reports', icon: Receipt, label: 'Reports' },
         ];
       case 'KITCHEN':
         return [
-          { to: '/kitchen', icon: ChefHat, label: 'Kitchen Display' },
+          { to: '/kitchen', icon: ChefHat, label: 'Live Kitchen' },
         ];
       case 'WAITER':
         return [

@@ -16,10 +16,11 @@ import { AdminHotelsPage } from './pages/admin/AdminHotelsPage';
 import { OwnerDashboard } from './pages/owner/OwnerDashboard';
 import { OwnerMenuPage } from './pages/owner/OwnerMenuPage';
 import { OwnerTablesPage } from './pages/owner/OwnerTablesPage';
+import { QRManagementPage } from './pages/owner/QRManagementPage';
 import { OwnerStaffPage } from './pages/owner/OwnerStaffPage';
 import { OwnerOrdersPage } from './pages/owner/OwnerOrdersPage';
 import { OwnerReportsPage } from './pages/owner/OwnerReportsPage';
-import { KitchenDashboard } from './pages/kitchen/KitchenDashboard';
+import { KitchenDashboardRealtime } from './pages/kitchen/KitchenDashboardRealtime';
 import { WaiterDashboard } from './pages/waiter/WaiterDashboard';
 import { CustomerOrderPage } from './pages/customer/CustomerOrderPage';
 
@@ -62,12 +63,13 @@ function App() {
               <Route index element={<OwnerDashboard />} />
               <Route path="menu" element={<OwnerMenuPage />} />
               <Route path="tables" element={<OwnerTablesPage />} />
+              <Route path="qr" element={<QRManagementPage />} />
               <Route path="staff" element={<OwnerStaffPage />} />
               <Route path="orders" element={<OwnerOrdersPage />} />
               <Route path="reports" element={<OwnerReportsPage />} />
             </Route>
 
-            {/* Kitchen Staff Routes */}
+            {/* Kitchen Staff Routes - Real-time Socket.IO */}
             <Route
               path="/kitchen"
               element={
@@ -76,7 +78,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<KitchenDashboard />} />
+              <Route index element={<KitchenDashboardRealtime />} />
             </Route>
 
             {/* Waiter Routes */}

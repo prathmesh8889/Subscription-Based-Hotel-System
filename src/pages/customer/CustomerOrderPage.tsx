@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useData } from '../../context/DataContext';
 import { CartItem, MenuItem } from '../../types';
+import { validateQRToken } from '../../services/qrTokenService';
 import {
   ShoppingCart, Plus, Minus, CheckCircle2, Clock,
   ChefHat, UtensilsCrossed, ArrowLeft, X, Search
@@ -32,26 +33,30 @@ export function CustomerOrderPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [tokenValid, setTokenValid] = useState(true);
 
-  // Validate session token (simulates backend validation)
+  // Validate session token using the secure QR token service
   useEffect(() => {
-    if (token) {
-      try {
-        const decoded = atob(token);
-        const parts = decoded.split(':');
-        if (parts.length >= 2 && parts[0] === tableId) {
-          setTokenValid(true);
-        } else {
+    if (token && hotelId) {
+      const result = validateQRToken(decodeURIComponent(token), hotelId, tableId || undefined);
+      if (result.valid) {
+        setTokenValid(true);
+      } else {
+        // For demo mode: if it's a simple base64 token, still allow it
+        try {
+          const decoded = atob(decodeURIComponent(token));
+          if (decoded === 'demo' || decoded.includes('demo')) {
+            setTokenValid(true);
+          } else {
+            setTokenValid(false);
+          }
+        } catch {
           setTokenValid(false);
         }
-      } catch {
-        // For demo purposes, accept any token format
-        setTokenValid(true);
       }
     } else {
       // Demo mode - no token provided
       setTokenValid(true);
     }
-  }, [token, tableId]);
+  }, [token, tableId, hotelId]);
 
   // Track order status
   const currentOrder = placedOrderId ? orders.find(o => o.id === placedOrderId) : null;
