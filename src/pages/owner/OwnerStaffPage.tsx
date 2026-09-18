@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
 import { UserRole } from '../../types';
-import { Users, Plus, X, Shield, ChefHat, ClipboardList } from 'lucide-react';
+import { Plus, X, Shield, ChefHat, ClipboardList } from 'lucide-react';
 
 export function OwnerStaffPage() {
   const { user } = useAuth();

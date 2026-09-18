@@ -7,8 +7,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
 import { PLAN_CONFIG } from '../../types';
 import {
-  UtensilsCrossed, Table2, Receipt, TrendingUp,
-  Clock, AlertTriangle, CheckCircle2, IndianRupee
+  Table2, Receipt, TrendingUp,
+  Clock, AlertTriangle, IndianRupee
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -17,7 +17,19 @@ export function OwnerDashboard() {
   const { getCurrentHotel, getHotelTables, getHotelMenu, getHotelOrders } = useData();
   
   const hotel = getCurrentHotel();
-  if (!hotel) return <div>Hotel not found</div>;
+  if (!hotel) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={32} className="text-gray-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Hotel Not Found</h2>
+          <p className="text-gray-500">Unable to load hotel data. Please contact support.</p>
+        </div>
+      </div>
+    );
+  }
 
   const tables = getHotelTables(hotel.id);
   const menuItems = getHotelMenu(hotel.id);

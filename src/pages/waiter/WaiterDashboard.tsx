@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Order, OrderStatus, PaymentMethod, CartItem, MenuItem } from '../../types';
+import { Order, PaymentMethod, CartItem, MenuItem } from '../../types';
 import {
   ClipboardList, Receipt, Plus, CheckCircle2,
   CreditCard, Banknote, X, ShoppingCart, Minus

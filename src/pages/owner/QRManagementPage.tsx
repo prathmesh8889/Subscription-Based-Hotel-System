@@ -4,7 +4,7 @@
 // the complete security architecture.
 // ============================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -18,7 +18,7 @@ import {
 import {
   QrCode, Shield, Clock, AlertTriangle, CheckCircle2,
   Download, Printer, Eye, EyeOff, RefreshCw, Lock,
-  Copy, ExternalLink, Info
+  Copy, Info
 } from 'lucide-react';
 
 export function QRManagementPage() {

@@ -130,6 +130,13 @@ export function KitchenDashboardRealtime() {
     return () => clearInterval(interval);
   }, []);
 
+  // Cleanup simulation on unmount
+  useEffect(() => {
+    return () => {
+      stopOrderSimulation();
+    };
+  }, []);
+
   // ============================================================
   // ORDER SIMULATION (Demo)
   // ============================================================

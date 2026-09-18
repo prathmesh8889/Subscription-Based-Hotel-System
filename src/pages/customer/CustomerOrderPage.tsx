@@ -8,8 +8,8 @@ import { useData } from '../../context/DataContext';
 import { CartItem, MenuItem } from '../../types';
 import { validateQRToken } from '../../services/qrTokenService';
 import {
-  ShoppingCart, Plus, Minus, CheckCircle2, Clock,
-  ChefHat, UtensilsCrossed, ArrowLeft, X, Search
+  ShoppingCart, Plus, Minus, CheckCircle2,
+  ChefHat, UtensilsCrossed, X, Search, AlertCircle
 } from 'lucide-react';
 
 export function CustomerOrderPage() {
@@ -100,6 +100,22 @@ export function CustomerOrderPage() {
     setCart([]);
     setShowCart(false);
   };
+
+  // Hotel not found screen
+  if (!hotel) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle size={32} className="text-amber-500" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-800 mb-2">Restaurant Not Found</h1>
+          <p className="text-gray-500">We couldn't find this restaurant.</p>
+          <p className="text-sm text-gray-400 mt-2">Please check the QR code or ask a staff member for help.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Token invalid screen
   if (!tokenValid) {
