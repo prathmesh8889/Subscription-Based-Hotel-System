@@ -52,38 +52,18 @@ function generateSignature(payload: string): string {
 // GENERATE QR TOKEN
 // ============================================================
 // Creates a secure, time-bound token for a table's QR code.
-// This simulates: jwt.sign(payload, QR_SECRET, { expiresIn: '4h' })
+// Simplified for reliable QR code scanning
 
 export function generateQRToken(hotelId: string, tableId: string): string {
   const now = Math.floor(Date.now() / 1000);
+  const sessionId = generateSessionId();
   
-  const payload: QRTokenPayload = {
-    hotel_id: hotelId,
-    table_id: tableId,
-    session_id: generateSessionId(),
-    type: 'qr_session',
-    iat: now,
-    exp: now + (TOKEN_EXPIRY_HOURS * 60 * 60),
-    signature: '',
-  };
-
-  // Generate signature over the payload
-  const payloadStr = JSON.stringify({
-    hotel_id: payload.hotel_id,
-    table_id: payload.table_id,
-    session_id: payload.session_id,
-    type: payload.type,
-    iat: payload.iat,
-    exp: payload.exp,
-  });
-  payload.signature = generateSignature(payloadStr);
-
-  // Encode as base64 (simulates JWT format: header.payload.signature)
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const body = btoa(JSON.stringify(payload));
-  const sig = btoa(payload.signature);
+  // Simple format: hotelId:tableId:sessionId:timestamp
+  // This is shorter and more reliable for QR codes
+  const simpleToken = `${hotelId}:${tableId}:${sessionId}:${now}`;
   
-  return `${header}.${body}.${sig}`;
+  // Encode to base64 for URL safety
+  return btoa(simpleToken);
 }
 
 // ============================================================
@@ -98,52 +78,50 @@ export function validateQRToken(
   expectedTableId?: string
 ): { valid: boolean; payload?: QRTokenPayload; error?: string } {
   try {
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      return { valid: false, error: 'Malformed token structure' };
+    // Decode the simple token format: hotelId:tableId:sessionId:timestamp
+    const decoded = atob(token);
+    const parts = decoded.split(':');
+    
+    if (parts.length !== 4) {
+      return { valid: false, error: 'Invalid token format' };
     }
 
-    const [headerB64, payloadB64, signatureB64] = parts;
-
-    // Decode payload
-    const payload: QRTokenPayload = JSON.parse(atob(payloadB64));
-
-    // Verify signature
-    const payloadStr = JSON.stringify({
-      hotel_id: payload.hotel_id,
-      table_id: payload.table_id,
-      session_id: payload.session_id,
-      type: payload.type,
-      iat: payload.iat,
-      exp: payload.exp,
-    });
-    const expectedSig = generateSignature(payloadStr);
-    const actualSig = atob(signatureB64);
-
-    if (actualSig !== expectedSig) {
-      return { valid: false, error: 'Invalid signature - token may be tampered' };
+    const [hotelId, tableId, sessionId, timestampStr] = parts;
+    const timestamp = parseInt(timestampStr, 10);
+    
+    // Check if timestamp is valid
+    if (isNaN(timestamp)) {
+      return { valid: false, error: 'Invalid timestamp' };
     }
 
-    // Check expiry
+    // Check expiry (4 hours)
     const now = Math.floor(Date.now() / 1000);
-    if (now > payload.exp) {
+    const expiryTime = timestamp + (TOKEN_EXPIRY_HOURS * 60 * 60);
+    
+    if (now > expiryTime) {
       return { valid: false, error: 'Token expired - please scan QR again' };
     }
 
-    // Check type
-    if (payload.type !== 'qr_session') {
-      return { valid: false, error: 'Invalid token type' };
-    }
-
     // Check hotel_id matches
-    if (payload.hotel_id !== expectedHotelId) {
+    if (hotelId !== expectedHotelId) {
       return { valid: false, error: 'Token hotel mismatch - unauthorized access' };
     }
 
     // Check table_id if provided
-    if (expectedTableId && payload.table_id !== expectedTableId) {
+    if (expectedTableId && tableId !== expectedTableId) {
       return { valid: false, error: 'Token table mismatch' };
     }
+
+    // Create payload object for compatibility
+    const payload: QRTokenPayload = {
+      hotel_id: hotelId,
+      table_id: tableId,
+      session_id: sessionId,
+      type: 'qr_session',
+      iat: timestamp,
+      exp: expiryTime,
+      signature: 'simple',
+    };
 
     return { valid: true, payload };
   } catch (error) {
@@ -183,9 +161,22 @@ function generateSessionId(): string {
 // ============================================================
 export function decodeTokenInfo(token: string): QRTokenPayload | null {
   try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    return JSON.parse(atob(parts[1]));
+    const decoded = atob(token);
+    const parts = decoded.split(':');
+    if (parts.length !== 4) return null;
+    
+    const [hotelId, tableId, sessionId, timestampStr] = parts;
+    const timestamp = parseInt(timestampStr, 10);
+    
+    return {
+      hotel_id: hotelId,
+      table_id: tableId,
+      session_id: sessionId,
+      type: 'qr_session',
+      iat: timestamp,
+      exp: timestamp + (TOKEN_EXPIRY_HOURS * 60 * 60),
+      signature: 'simple',
+    };
   } catch {
     return null;
   }

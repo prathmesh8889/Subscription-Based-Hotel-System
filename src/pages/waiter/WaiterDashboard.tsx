@@ -18,7 +18,7 @@ export function WaiterDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const hotelId = user?.hotel_id || '';
+  const hotelId = user?.hotelId || '';
   const orders = getHotelOrders(hotelId);
   const tables = getHotelTables(hotelId);
   const menuItems = getHotelMenu(hotelId);

@@ -11,7 +11,7 @@ import { Search, Clock } from 'lucide-react';
 export function OwnerOrdersPage() {
   const { user } = useAuth();
   const { getHotelOrders } = useData();
-  const hotelId = user?.hotel_id || '';
+  const hotelId = user?.hotelId || '';
   const orders = getHotelOrders(hotelId);
 
   const [statusFilter, setStatusFilter] = useState<string>('all');

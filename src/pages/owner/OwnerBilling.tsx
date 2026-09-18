@@ -15,7 +15,7 @@ import {
 export function OwnerBilling() {
   const { user } = useAuth();
   const { getHotelOrders, updatePaymentStatus } = useData();
-  const hotelId = user?.hotel_id || '';
+  const hotelId = user?.hotelId || '';
   const orders = getHotelOrders(hotelId);
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);

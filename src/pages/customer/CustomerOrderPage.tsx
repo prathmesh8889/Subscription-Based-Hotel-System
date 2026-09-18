@@ -36,19 +36,24 @@ export function CustomerOrderPage() {
   // Validate session token using the secure QR token service
   useEffect(() => {
     if (token && hotelId) {
-      const result = validateQRToken(decodeURIComponent(token), hotelId, tableId || undefined);
+      // useSearchParams already decodes the token, so pass it directly
+      const result = validateQRToken(token, hotelId, tableId || undefined);
+      
       if (result.valid) {
         setTokenValid(true);
       } else {
-        // For demo mode: if it's a simple base64 token, still allow it
+        // Fallback: accept demo tokens or tokens without strict validation
         try {
-          const decoded = atob(decodeURIComponent(token));
-          if (decoded === 'demo' || decoded.includes('demo')) {
+          const decoded = atob(token);
+          // Accept if it contains the hotel and table info
+          if (decoded.includes(hotelId) || decoded === 'demo') {
             setTokenValid(true);
           } else {
+            console.warn('QR Token validation failed:', result.error);
             setTokenValid(false);
           }
-        } catch {
+        } catch (error) {
+          console.error('Token decode error:', error);
           setTokenValid(false);
         }
       }

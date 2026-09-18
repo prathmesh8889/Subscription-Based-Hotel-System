@@ -30,9 +30,9 @@ export function DashboardLayout() {
     switch (user?.role) {
       case 'SUPER_ADMIN':
         return [
-          { to: '/admin', icon: Building2, label: 'Hotels' },
-          { to: '/admin/subscriptions', icon: CreditCard, label: 'Subscriptions' },
-          { to: '/admin/analytics', icon: LayoutDashboard, label: 'Analytics' },
+          { to: '/platform/dashboard', icon: Building2, label: 'Hotels' },
+          { to: '/platform/subscriptions', icon: CreditCard, label: 'Subscriptions' },
+          { to: '/platform/analytics', icon: LayoutDashboard, label: 'Analytics' },
         ];
       case 'OWNER':
         return [

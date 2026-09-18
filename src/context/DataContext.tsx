@@ -56,8 +56,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const getHotel = useCallback((id: string) => hotels.find(h => h.id === id), [hotels]);
   
   const getCurrentHotel = useCallback(() => {
-    if (!user?.hotel_id) return undefined;
-    return hotels.find(h => h.id === user.hotel_id);
+    if (!user?.hotelId) return undefined;
+    return hotels.find(h => h.id === user.hotelId);
   }, [user, hotels]);
 
   const updateHotel = useCallback((id: string, data: Partial<Hotel>) => {
