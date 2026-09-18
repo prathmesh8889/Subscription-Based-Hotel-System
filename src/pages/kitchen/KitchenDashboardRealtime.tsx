@@ -32,7 +32,7 @@ export function KitchenDashboardRealtime() {
   const [newOrderFlash, setNewOrderFlash] = useState(false);
   const [connectionRoom, setConnectionRoom] = useState<string>('');
 
-  const hotelId = user?.hotel_id || '';
+  const hotelId = user?.hotelId || '';
   const allOrders = getHotelOrders(hotelId);
   const tables = getHotelTables(hotelId);
   const menuItems = getHotelMenu(hotelId);

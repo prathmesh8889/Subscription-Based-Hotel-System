@@ -23,7 +23,7 @@ interface ActivityItem {
 export function LiveActivityFeed() {
   const { user } = useAuth();
   const { getHotelOrders, getHotelTables } = useData();
-  const hotelId = user?.hotel_id || '';
+  const hotelId = user?.hotelId || '';
   const orders = getHotelOrders(hotelId);
   const tables = getHotelTables(hotelId);
 

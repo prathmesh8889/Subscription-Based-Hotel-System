@@ -14,6 +14,7 @@ export const mockUsers: User[] = [
     name: 'Super Admin',
     password: 'admin123',
     role: 'SUPER_ADMIN',
+    hotelId: null,
     hotel_id: null,
   },
   {
@@ -22,6 +23,7 @@ export const mockUsers: User[] = [
     name: 'Rajesh Kumar',
     password: 'owner123',
     role: 'OWNER',
+    hotelId: 'hotel-1',
     hotel_id: 'hotel-1',
   },
   {
@@ -30,6 +32,7 @@ export const mockUsers: User[] = [
     name: 'Priya Sharma',
     password: 'owner123',
     role: 'OWNER',
+    hotelId: 'hotel-2',
     hotel_id: 'hotel-2',
   },
   {
@@ -38,6 +41,7 @@ export const mockUsers: User[] = [
     name: 'Chef Anil',
     password: 'kitchen123',
     role: 'KITCHEN',
+    hotelId: 'hotel-1',
     hotel_id: 'hotel-1',
   },
   {
@@ -46,6 +50,7 @@ export const mockUsers: User[] = [
     name: 'Suresh',
     password: 'waiter123',
     role: 'WAITER',
+    hotelId: 'hotel-1',
     hotel_id: 'hotel-1',
   },
 ];

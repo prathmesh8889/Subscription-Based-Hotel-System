@@ -22,9 +22,10 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  password: string; // In real app: hashed
+  password?: string; // In real app: hashed (not returned from API)
   role: UserRole;
-  hotel_id: string | null;
+  hotelId: string | null;
+  hotel_id?: string | null; // Alias for backward compatibility
   avatar?: string;
 }
 

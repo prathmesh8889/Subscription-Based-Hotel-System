@@ -12,6 +12,7 @@ import { DashboardLayout } from './components/DashboardLayout';
 
 // Pages
 import { LoginPage } from './pages/LoginPage';
+import { SuperAdminLoginPage } from './pages/SuperAdminLoginPage';
 import { AdminHotelsPage } from './pages/admin/AdminHotelsPage';
 import { OwnerDashboard } from './pages/owner/OwnerDashboard';
 import { OwnerMenuPage } from './pages/owner/OwnerMenuPage';
@@ -33,6 +34,9 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
+            
+            {/* Secret Super Admin Login */}
+            <Route path="/platform/login" element={<SuperAdminLoginPage />} />
             
             {/* Customer QR Route (Public - No Auth Required) */}
             <Route path="/customer/:hotelId" element={<CustomerOrderPage />} />

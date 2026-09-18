@@ -24,16 +24,16 @@ export function LoginPage() {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const result = login(email, password);
+    const result = await login(email, password);
     
     if (result.success) {
       // Redirect based on role - check from stored user
-      const stored = localStorage.getItem('auth_user');
+      const stored = sessionStorage.getItem('auth_user');
       if (stored) {
         const user = JSON.parse(stored);
         switch (user.role) {
           case 'SUPER_ADMIN':
-            navigate('/admin');
+            navigate('/platform/dashboard');
             break;
           case 'OWNER':
             navigate('/owner');
@@ -55,11 +55,13 @@ export function LoginPage() {
     setLoading(false);
   };
 
+  // Demo accounts - In production, these would be removed
+  // For demo purposes only - credentials shown for testing
   const demoAccounts = [
-    { role: 'Super Admin', email: 'admin@saas.com', password: 'admin123' },
-    { role: 'Hotel Owner', email: 'owner@tajpalace.com', password: 'owner123' },
-    { role: 'Kitchen Staff', email: 'kitchen@tajpalace.com', password: 'kitchen123' },
-    { role: 'Waiter', email: 'waiter@tajpalace.com', password: 'waiter123' },
+    { role: 'Super Admin', email: 'admin@platform.com', password: 'ChangeThisPassword123!' },
+    { role: 'Hotel Owner', email: 'owner@tajpalace.com', password: 'Owner@123' },
+    { role: 'Kitchen Staff', email: 'kitchen@tajpalace.com', password: 'Kitchen@123' },
+    { role: 'Waiter', email: 'waiter@tajpalace.com', password: 'Waiter@123' },
   ];
 
   return (

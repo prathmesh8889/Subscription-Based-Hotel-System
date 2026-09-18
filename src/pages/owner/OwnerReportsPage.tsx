@@ -14,7 +14,7 @@ import { Download, TrendingUp, IndianRupee, Receipt } from 'lucide-react';
 export function OwnerReportsPage() {
   const { user } = useAuth();
   const { getHotelOrders, getHotelMenu } = useData();
-  const hotelId = user?.hotel_id || '';
+  const hotelId = user?.hotelId || '';
   const orders = getHotelOrders(hotelId);
   const menuItems = getHotelMenu(hotelId);
 
