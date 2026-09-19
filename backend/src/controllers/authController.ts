@@ -27,6 +27,14 @@ const loginSchema = z.object({
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not configured. Please set DATABASE_URL environment variable.',
+      });
+    }
+
     const validationResult = registerSchema.safeParse(req.body);
 
     if (!validationResult.success) {
@@ -151,6 +159,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not configured. Please set DATABASE_URL environment variable.',
+      });
+    }
+
     const validationResult = loginSchema.safeParse(req.body);
 
     if (!validationResult.success) {
@@ -270,6 +286,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
 export const verifySession = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not configured',
+      });
+    }
+
     const token = req.cookies?.auth_token;
 
     if (!token) {
@@ -340,6 +364,14 @@ export const verifySession = async (req: Request, res: Response): Promise<void> 
 
 export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not configured',
+      });
+    }
+
     const token = req.cookies?.auth_token;
 
     if (token) {
@@ -391,6 +423,14 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 
 export const getCurrentUser = async (req: any, res: Response): Promise<void> => {
   try {
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not configured',
+      });
+    }
+
     const userId = req.user?.userId;
 
     if (!userId) {
