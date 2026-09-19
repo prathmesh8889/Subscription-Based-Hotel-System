@@ -19,7 +19,7 @@ export function AdminClientsPage(){
   const create=async()=>{
     setSaving(true);setError('');setMessage('');
     try{
-      await api('/platform/clients',{method:'POST',body:JSON.stringify({...form,subscriptionDays:Number(form.subscriptionDays)})});
+      await api('/platform/clients',{method:'POST',body:JSON.stringify({...form,email:form.email||undefined,subscriptionDays:Number(form.subscriptionDays)})});
       setMessage('Client and owner login created successfully.');
       setForm(blank);setShow(false);await load();
     }catch(e:any){setError(e.message)}
