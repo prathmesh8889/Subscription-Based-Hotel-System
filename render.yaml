@@ -1,0 +1,35 @@
+# Render Blueprint for Backend Deployment
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: restroflow-backend
+    runtime: node
+    region: oregon
+    plan: starter
+    branch: main
+    buildCommand: cd backend && npm install && npx prisma generate && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: BCRYPT_SALT_ROUNDS
+        value: "10"
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SUPER_ADMIN_EMAIL
+        value: admin@platform.com
+      - key: SUPER_ADMIN_PASSWORD
+        generateValue: true
+      - key: QR_SECRET
+        generateValue: true
+      - key: QR_TOKEN_EXPIRY_HOURS
+        value: "4"
