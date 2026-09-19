@@ -31,7 +31,7 @@ const createHotelSchema = z.object({
 // ============================================================
 
 export const createHotelAndOwner = async (
-  req: AuthRequest,
+  req: any,
   res: Response
 ): Promise<void> => {
   try {
