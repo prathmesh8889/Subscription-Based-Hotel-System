@@ -1,0 +1,1 @@
+import express from'express';import{authenticateToken,authorizeRole}from'../middleware/auth';import{getOrders,updateOrderStatus}from'../controllers/orderController';const r=express.Router();r.use(authenticateToken);r.get('/',authorizeRole(['OWNER','KITCHEN','WAITER']),getOrders);r.patch('/:id/status',authorizeRole(['OWNER','KITCHEN','WAITER']),updateOrderStatus);export default r;
