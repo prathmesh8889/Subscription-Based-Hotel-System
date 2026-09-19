@@ -3,6 +3,8 @@ import { createHotelAndOwner, getAllHotels } from '../controllers/hotelControlle
 import { getSubscriptions, updateSubscription } from '../controllers/subscriptionController';
 import { getPlatformAnalytics } from '../controllers/platformAnalyticsController';
 import { getNotifications } from '../controllers/platformNotificationsController';
+import { getCredentialChangeStatus, changeAdminCredentials } from '../controllers/adminCredentialController';
+import { getClients } from '../controllers/clientController';
 import { authenticateToken, authorizeRole } from '../middleware/auth';
 
 const router = express.Router();
@@ -10,6 +12,10 @@ router.use(authenticateToken);
 router.use(authorizeRole(['SUPER_ADMIN']));
 
 router.post('/create-hotel', createHotelAndOwner);
+router.get('/clients', getClients);
+router.post('/clients', createHotelAndOwner);
+router.get('/credentials/status', getCredentialChangeStatus);
+router.post('/credentials/change', changeAdminCredentials);
 router.get('/hotels', getAllHotels);
 router.get('/subscriptions', getSubscriptions);
 router.patch('/hotels/:id/subscription', updateSubscription);

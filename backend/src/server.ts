@@ -92,39 +92,37 @@ app.use((error: any, _req: express.Request, res: express.Response, _next: expres
 });
 
 async function ensureSuperAdmin() {
+  const existingAdmin = await prisma.user.findFirst({
+    where: { role: 'SUPER_ADMIN' },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  if (existingAdmin) {
+    if (!existingAdmin.isActive) {
+      await prisma.user.update({
+        where: { id: existingAdmin.id },
+        data: { isActive: true },
+      });
+    }
+    return;
+  }
+
   const email = process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase();
   const password = process.env.SUPER_ADMIN_PASSWORD;
 
   if (!email || !password) {
-    throw new Error('SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD are required');
+    throw new Error('SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD are required for initial admin creation');
   }
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  const hashedPassword = await bcrypt.hash(password, 12);
-
-  if (existing) {
-    if (existing.role !== 'SUPER_ADMIN') {
-      throw new Error('SUPER_ADMIN_EMAIL belongs to a non-super-admin account');
-    }
-
-    const passwordMatches = await bcrypt.compare(password, existing.password);
-    if (!passwordMatches || !existing.isActive) {
-      await prisma.user.update({
-        where: { id: existing.id },
-        data: {
-          password: hashedPassword,
-          isActive: true,
-        },
-      });
-      console.log('✅ Super-admin credentials synchronized from Render environment');
-    }
-    return;
+  const conflict = await prisma.user.findUnique({ where: { email } });
+  if (conflict) {
+    throw new Error('SUPER_ADMIN_EMAIL is already used by another account');
   }
 
   await prisma.user.create({
     data: {
       email,
-      password: hashedPassword,
+      password: await bcrypt.hash(password, 12),
       name: 'Platform Admin',
       role: 'SUPER_ADMIN',
       hotelId: null,
@@ -132,7 +130,7 @@ async function ensureSuperAdmin() {
     },
   });
 
-  console.log('✅ Initial super-admin account created');
+  console.log('Initial super-admin account created');
 }
 
 async function startServer() {

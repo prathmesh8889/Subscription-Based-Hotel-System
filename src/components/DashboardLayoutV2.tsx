@@ -1,7 +1,7 @@
 import React from'react';
 import{NavLink,useNavigate}from'react-router-dom';
 import{useAuth}from'../context/AuthContext';
-import{Building2,CreditCard,LayoutDashboard,Settings,Bell,LogOut,UtensilsCrossed}from'lucide-react';
+import{Building2,CreditCard,LayoutDashboard,Settings,Bell,LogOut,UtensilsCrossed,Users}from'lucide-react';
 import{PlatformPanelSwitch}from'./PlatformPanelSwitch';
 
 export function DashboardLayoutV2(){
@@ -10,6 +10,7 @@ export function DashboardLayoutV2(){
   const signOut=async()=>{await logout();nav('/platform/login')};
   const links=[
     ['/platform/dashboard',Building2,'Hotels'],
+    ['/platform/clients',Users,'Clients'],
     ['/platform/subscriptions',CreditCard,'Subscriptions'],
     ['/platform/analytics',LayoutDashboard,'Analytics'],
     ['/platform/settings',Settings,'Settings'],
