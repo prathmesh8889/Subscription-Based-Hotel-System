@@ -6,6 +6,7 @@
 
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
+import { getIO } from '../socket';
 
 // ============================================================
 // GST CONFIGURATION
@@ -286,6 +287,14 @@ export const processPayment = async (req: any, res: Response): Promise<void> => 
         paymentStatus: 'PAID',
         paymentMethod: paymentMethod as any,
       },
+    });
+
+    getIO()?.of('/customer').to('customer-order:' + updatedOrder.id).emit('order_updated', {
+      orderId: updatedOrder.id,
+      status: updatedOrder.status,
+      paymentStatus: updatedOrder.paymentStatus,
+      paymentMethod: updatedOrder.paymentMethod,
+      updatedAt: updatedOrder.updatedAt,
     });
 
     // Log to audit

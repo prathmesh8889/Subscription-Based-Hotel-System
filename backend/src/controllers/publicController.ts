@@ -1,1 +1,175 @@
-import{Request,Response}from'express';import{z}from'zod';import{prisma}from'../config/database';import{getIO}from'../socket';const S=z.object({hotelId:z.string(),tableId:z.string(),token:z.string().min(20),items:z.array(z.object({menuItemId:z.string(),quantity:z.number().int().min(1).max(20)})).min(1)});const access=async(h:string,t:string,k:string)=>{const H=await prisma.hotel.findUnique({where:{id:h}});if(!H||!H.isActive||H.subscriptionEnd.getTime()<Date.now())return null;const T=await prisma.table.findFirst({where:{id:t,hotelId:h,qrToken:k}});return T?{H,T}:null};export const getPublicMenu=async(q:Request,r:Response)=>{const a=await access(q.params.hotelId,String(q.query.tableId||''),String(q.query.token||''));if(!a){r.status(403).json({success:false,error:'Invalid table QR code.'});return}const m=await prisma.menuItem.findMany({where:{hotelId:q.params.hotelId,isAvailable:true},orderBy:[{category:'asc'},{sortOrder:'asc'}]});r.json({success:true,data:{hotel:{id:a.H.id,name:a.H.name},table:{id:a.T.id,tableNumber:a.T.tableNumber},menuItems:m.map(i=>({...i,price:Number(i.price)}))}})};export const createPublicOrder=async(q:Request,r:Response)=>{const p=S.safeParse(q.body);if(!p.success){r.status(400).json({success:false,error:'Invalid order.'});return}const d=p.data,a=await access(d.hotelId,d.tableId,d.token);if(!a){r.status(403).json({success:false,error:'Invalid table QR code.'});return}const ids=[...new Set(d.items.map(i=>i.menuItemId))],m=await prisma.menuItem.findMany({where:{id:{in:ids},hotelId:d.hotelId,isAvailable:true}});if(m.length!==ids.length){r.status(400).json({success:false,error:'Unavailable menu item.'});return}const map=new Map(m.map(i=>[i.id,i])),items=d.items.map(i=>{const x=map.get(i.menuItemId)!;return{menuItemId:x.id,name:x.name,price:Number(x.price),quantity:i.quantity}}),totalAmount=items.reduce((s,i)=>s+i.price*i.quantity,0);const o=await prisma.order.create({data:{hotelId:d.hotelId,tableId:d.tableId,items,totalAmount,createdBy:null}});await prisma.table.update({where:{id:d.tableId},data:{status:'OCCUPIED'}});getIO()?.to('hotel:'+d.hotelId).emit('new_order',{orderId:o.id,hotelId:o.hotelId,tableId:o.tableId,tableNumber:a.T.tableNumber,items,totalAmount,status:o.status,paymentStatus:o.paymentStatus,createdAt:o.createdAt});r.status(201).json({success:true,data:{orderId:o.id,totalAmount}})};
+import { Request, Response } from 'express';
+import { z } from 'zod';
+import { prisma } from '../config/database';
+import { getIO } from '../socket';
+
+const orderSchema = z.object({
+  hotelId: z.string(),
+  tableId: z.string(),
+  token: z.string().min(20),
+  items: z.array(z.object({
+    menuItemId: z.string(),
+    quantity: z.number().int().min(1).max(20),
+  })).min(1),
+});
+
+async function getAccess(hotelId: string, tableId: string, token: string) {
+  const hotel = await prisma.hotel.findUnique({ where: { id: hotelId } });
+  if (!hotel || !hotel.isActive || hotel.subscriptionEnd.getTime() < Date.now()) return null;
+
+  const table = await prisma.table.findFirst({
+    where: { id: tableId, hotelId, qrToken: token },
+  });
+  return table ? { hotel, table } : null;
+}
+
+function serializeOrder(order: any) {
+  return {
+    id: order.id,
+    orderId: order.id,
+    hotelId: order.hotelId,
+    tableId: order.tableId,
+    tableNumber: order.table?.tableNumber,
+    hotel: order.hotel ? {
+      id: order.hotel.id,
+      name: order.hotel.name,
+      address: order.hotel.address,
+      phone: order.hotel.phone,
+    } : undefined,
+    items: order.items,
+    totalAmount: Number(order.totalAmount),
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    paymentMethod: order.paymentMethod,
+    notes: order.notes,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+  };
+}
+
+export const getPublicMenu = async (req: Request, res: Response) => {
+  const access = await getAccess(
+    req.params.hotelId,
+    String(req.query.tableId || ''),
+    String(req.query.token || '')
+  );
+
+  if (!access) {
+    res.status(403).json({ success: false, error: 'Invalid table QR code.' });
+    return;
+  }
+
+  const menuItems = await prisma.menuItem.findMany({
+    where: { hotelId: req.params.hotelId, isAvailable: true },
+    orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
+  });
+
+  res.json({
+    success: true,
+    data: {
+      hotel: { id: access.hotel.id, name: access.hotel.name },
+      table: { id: access.table.id, tableNumber: access.table.tableNumber },
+      menuItems: menuItems.map(item => ({ ...item, price: Number(item.price) })),
+    },
+  });
+};
+
+export const getPublicOrder = async (req: Request, res: Response) => {
+  const hotelId = String(req.query.hotelId || '');
+  const tableId = String(req.query.tableId || '');
+  const token = String(req.query.token || '');
+
+  const access = await getAccess(hotelId, tableId, token);
+  if (!access) {
+    res.status(403).json({ success: false, error: 'Invalid table QR code.' });
+    return;
+  }
+
+  const order = await prisma.order.findFirst({
+    where: {
+      id: req.params.orderId,
+      hotelId,
+      tableId,
+    },
+    include: {
+      table: { select: { tableNumber: true } },
+      hotel: { select: { id: true, name: true, address: true, phone: true } },
+    },
+  });
+
+  if (!order) {
+    res.status(404).json({ success: false, error: 'Order not found.' });
+    return;
+  }
+
+  res.json({ success: true, data: serializeOrder(order) });
+};
+
+export const createPublicOrder = async (req: Request, res: Response) => {
+  const parsed = orderSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ success: false, error: 'Invalid order.' });
+    return;
+  }
+
+  const data = parsed.data;
+  const access = await getAccess(data.hotelId, data.tableId, data.token);
+  if (!access) {
+    res.status(403).json({ success: false, error: 'Invalid table QR code.' });
+    return;
+  }
+
+  const ids = [...new Set(data.items.map(item => item.menuItemId))];
+  const menuItems = await prisma.menuItem.findMany({
+    where: {
+      id: { in: ids },
+      hotelId: data.hotelId,
+      isAvailable: true,
+    },
+  });
+
+  if (menuItems.length !== ids.length) {
+    res.status(400).json({ success: false, error: 'Unavailable menu item.' });
+    return;
+  }
+
+  const itemMap = new Map(menuItems.map(item => [item.id, item]));
+  const items = data.items.map(item => {
+    const menuItem = itemMap.get(item.menuItemId)!;
+    return {
+      menuItemId: menuItem.id,
+      name: menuItem.name,
+      price: Number(menuItem.price),
+      quantity: item.quantity,
+    };
+  });
+
+  const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const order = await prisma.order.create({
+    data: {
+      hotelId: data.hotelId,
+      tableId: data.tableId,
+      items,
+      totalAmount,
+      createdBy: null,
+    },
+    include: {
+      table: { select: { tableNumber: true } },
+      hotel: { select: { id: true, name: true, address: true, phone: true } },
+    },
+  });
+
+  await prisma.table.update({
+    where: { id: data.tableId },
+    data: { status: 'OCCUPIED' },
+  });
+
+  const payload = serializeOrder(order);
+  getIO()?.to('hotel:' + data.hotelId).emit('new_order', payload);
+
+  res.status(201).json({
+    success: true,
+    data: payload,
+  });
+};

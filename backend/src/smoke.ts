@@ -83,6 +83,7 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
   let hotelId: string | null = null;
   let ownerId: string | null = null;
   let socket: Socket | null = null;
+  let customerSocket: Socket | null = null;
 
   try {
     const hotel = await prisma.hotel.create({
@@ -167,11 +168,58 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
     const event = await liveEvent;
     assert(event?.orderId === orderBody.data.orderId, 'Socket.IO event did not match created order');
 
+    const publicOrder = await fetch(
+      baseUrl + '/api/public/orders/' + encodeURIComponent(orderBody.data.orderId) +
+      '?hotelId=' + encodeURIComponent(hotelId) +
+      '&tableId=' + encodeURIComponent(table.id) +
+      '&token=' + encodeURIComponent(table.qrToken)
+    );
+    const publicOrderBody: any = await publicOrder.json();
+    assert(publicOrder.ok && publicOrderBody?.data?.id === orderBody.data.orderId, 'Customer order details endpoint failed');
+
+    customerSocket = createSocket(baseUrl + '/customer', {
+      transports: ['websocket', 'polling'],
+      auth: {
+        hotelId,
+        tableId: table.id,
+        token: table.qrToken,
+      },
+      reconnection: false,
+    });
+    await waitForSocket(customerSocket);
+
+    const customerUpdate = new Promise<any>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('Customer live order update timed out')), 8000);
+      customerSocket!.once('order_updated', payload => {
+        clearTimeout(timer);
+        resolve(payload);
+      });
+    });
+
+    customerSocket.emit('watch_order', { orderId: orderBody.data.orderId });
+
+    const statusResponse = await fetch(baseUrl + '/api/orders/' + orderBody.data.orderId + '/status', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: ownerCookie,
+      },
+      body: JSON.stringify({ status: 'PREPARING' }),
+    });
+    assert(statusResponse.ok, 'Staff order status update failed');
+
+    const customerEvent = await customerUpdate;
+    assert(
+      customerEvent?.orderId === orderBody.data.orderId && customerEvent?.status === 'PREPARING',
+      'Customer did not receive live PREPARING update'
+    );
+
     const savedOrder = await prisma.order.findUnique({ where: { id: orderBody.data.orderId } });
     assert(savedOrder, 'Order was not persisted in PostgreSQL');
     assert(Number(savedOrder.totalAmount) === 99, 'Server-side total is incorrect');
   } finally {
     if (socket) socket.disconnect();
+    if (customerSocket) customerSocket.disconnect();
     if (hotelId) {
       await prisma.auditLog.deleteMany({ where: { hotelId } });
       await prisma.order.deleteMany({ where: { hotelId } });

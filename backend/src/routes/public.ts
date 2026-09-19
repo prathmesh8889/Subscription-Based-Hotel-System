@@ -1,1 +1,17 @@
-import express from'express';import rateLimit from'express-rate-limit';import{getPublicMenu,createPublicOrder}from'../controllers/publicController';const r=express.Router(),lim=rateLimit({windowMs:60000,max:20,standardHeaders:true,legacyHeaders:false});r.get('/menu/:hotelId',getPublicMenu);r.post('/orders',lim,createPublicOrder);export default r;
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import { getPublicMenu, createPublicOrder, getPublicOrder } from '../controllers/publicController';
+
+const router = express.Router();
+const limiter = rateLimit({
+  windowMs: 60_000,
+  max: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.get('/menu/:hotelId', getPublicMenu);
+router.get('/orders/:orderId', limiter, getPublicOrder);
+router.post('/orders', limiter, createPublicOrder);
+
+export default router;

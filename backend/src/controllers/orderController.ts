@@ -1,1 +1,73 @@
-import{Response}from'express';import{prisma}from'../config/database';import{getIO}from'../socket';const out=(o:any)=>({...o,totalAmount:Number(o.totalAmount),tableNumber:o.table?.tableNumber});export const getOrders=async(q:any,r:Response)=>{const hotelId=q.user?.hotelId;if(!hotelId){r.status(403).json({success:false,error:'No hotel assigned.'});return}const where:any={hotelId};if(q.query.status)where.status=q.query.status;if(q.query.paymentStatus)where.paymentStatus=q.query.paymentStatus;const d=await prisma.order.findMany({where,include:{table:{select:{tableNumber:true}}},orderBy:{createdAt:'desc'},take:250});r.json({success:true,data:d.map(out)})};export const updateOrderStatus=async(q:any,r:Response)=>{const hotelId=q.user?.hotelId,status=q.body.status,o=await prisma.order.findFirst({where:{id:q.params.id,hotelId}});if(!o||!['PENDING','PREPARING','READY','SERVED','CANCELLED'].includes(status)){r.status(400).json({success:false,error:'Invalid order/status.'});return}const u=await prisma.order.update({where:{id:o.id},data:{status,handledBy:q.user.userId},include:{table:{select:{tableNumber:true}}}});if(status==='SERVED'||status==='CANCELLED')await prisma.table.update({where:{id:o.tableId},data:{status:'AVAILABLE'}});getIO()?.to('hotel:'+hotelId).emit('order_status_updated',{orderId:u.id,status:u.status,updatedAt:u.updatedAt});r.json({success:true,data:out(u)})};
+import { Response } from 'express';
+import { prisma } from '../config/database';
+import { getIO } from '../socket';
+
+const serializeOrder = (order: any) => ({
+  ...order,
+  totalAmount: Number(order.totalAmount),
+  tableNumber: order.table?.tableNumber,
+});
+
+export const getOrders = async (req: any, res: Response) => {
+  const hotelId = req.user?.hotelId;
+  if (!hotelId) {
+    res.status(403).json({ success: false, error: 'No hotel assigned.' });
+    return;
+  }
+
+  const where: any = { hotelId };
+  if (req.query.status) where.status = req.query.status;
+  if (req.query.paymentStatus) where.paymentStatus = req.query.paymentStatus;
+
+  const orders = await prisma.order.findMany({
+    where,
+    include: { table: { select: { tableNumber: true } } },
+    orderBy: { createdAt: 'desc' },
+    take: 250,
+  });
+
+  res.json({ success: true, data: orders.map(serializeOrder) });
+};
+
+export const updateOrderStatus = async (req: any, res: Response) => {
+  const hotelId = req.user?.hotelId;
+  const status = req.body.status;
+
+  const order = await prisma.order.findFirst({
+    where: { id: req.params.id, hotelId },
+  });
+
+  if (!order || !['PENDING', 'PREPARING', 'READY', 'SERVED', 'CANCELLED'].includes(status)) {
+    res.status(400).json({ success: false, error: 'Invalid order/status.' });
+    return;
+  }
+
+  const updated = await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status,
+      handledBy: req.user.userId,
+    },
+    include: { table: { select: { tableNumber: true } } },
+  });
+
+  if (status === 'SERVED' || status === 'CANCELLED') {
+    await prisma.table.update({
+      where: { id: order.tableId },
+      data: { status: 'AVAILABLE' },
+    });
+  }
+
+  const payload = {
+    orderId: updated.id,
+    status: updated.status,
+    paymentStatus: updated.paymentStatus,
+    paymentMethod: updated.paymentMethod,
+    updatedAt: updated.updatedAt,
+  };
+
+  getIO()?.to('hotel:' + hotelId).emit('order_status_updated', payload);
+  getIO()?.of('/customer').to('customer-order:' + updated.id).emit('order_updated', payload);
+
+  res.json({ success: true, data: serializeOrder(updated) });
+};
