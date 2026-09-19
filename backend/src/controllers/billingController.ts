@@ -6,7 +6,6 @@
 
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
-import { AuthRequest } from '../middleware/auth';
 
 // ============================================================
 // GST CONFIGURATION

@@ -8,7 +8,6 @@ import { Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/database';
 import bcrypt from 'bcryptjs';
-import { AuthRequest } from '../middleware/auth';
 import { SubscriptionPlan } from '@prisma/client';
 
 // ============================================================
