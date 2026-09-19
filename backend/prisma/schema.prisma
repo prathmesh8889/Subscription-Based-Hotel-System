@@ -206,8 +206,8 @@ model Order {
   paymentStatus   PaymentStatus   @default(UNPAID)
   paymentMethod   PaymentMethod?
   
-  createdBy       String
-  creator         User            @relation("OrderCreator", fields: [createdBy], references: [id])
+  createdBy       String?
+  creator         User?           @relation("OrderCreator", fields: [createdBy], references: [id])
   handledBy       String?
   handler         User?           @relation("OrderHandler", fields: [handledBy], references: [id])
   

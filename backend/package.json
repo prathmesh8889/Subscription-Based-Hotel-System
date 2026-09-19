@@ -23,6 +23,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "socket.io": "^4.6.1",
+    "socket.io-client": "^4.6.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -41,6 +42,6 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20 <27"
   }
 }
