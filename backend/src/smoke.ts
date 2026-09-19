@@ -13,10 +13,8 @@ async function login(baseUrl: string, email: string, password: string): Promise<
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-
   const body: any = await response.json();
   assert(response.ok && body?.success, 'Login smoke test failed for ' + email);
-
   const setCookie = response.headers.get('set-cookie');
   assert(setCookie, 'Login did not return an auth cookie');
   return setCookie.split(';')[0];
@@ -42,7 +40,7 @@ function waitForSocket(socket: Socket): Promise<void> {
 
 export async function runProductionSmokeTests(port: number): Promise<void> {
   const baseUrl = `http://127.0.0.1:${port}`;
-  const frontendUrl = process.env.FRONTEND_URL;
+  const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
   const adminEmail = process.env.SUPER_ADMIN_EMAIL!;
   const adminPassword = process.env.SUPER_ADMIN_PASSWORD!;
 
@@ -51,12 +49,20 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
   assert(health.ok && healthBody?.database === 'connected', 'Health endpoint/database check failed');
 
   if (frontendUrl) {
-    for (const path of ['/platform/login', '/platform/dashboard', '/platform/hotels']) {
-      const response = await fetch(frontendUrl.replace(/\/$/, '') + path);
-      const html = await response.text();
-      assert(response.ok, 'Frontend route failed: ' + path);
-      assert(html.includes('id="root"'), 'Frontend SPA shell missing for: ' + path);
-    }
+    const response = await fetch(frontendUrl + '/');
+    const html = await response.text();
+    assert(response.ok, 'Frontend root failed');
+    assert(html.includes('id="root"'), 'Frontend SPA root missing');
+
+    const scriptMatch = html.match(/<script[^>]+src="([^"]+\.js)"/i);
+    assert(scriptMatch, 'Frontend JavaScript bundle not found');
+    const bundleUrl = new URL(scriptMatch[1], frontendUrl + '/').toString();
+    const bundleResponse = await fetch(bundleUrl);
+    const bundle = await bundleResponse.text();
+    assert(bundleResponse.ok, 'Frontend JavaScript bundle failed to load');
+    assert(bundle.includes('Platform Admin'), 'Admin login UI missing from deployed bundle');
+    assert(bundle.includes('Hotel Management'), 'Admin dashboard UI missing from deployed bundle');
+    assert(bundle.includes('Super Admin access is required'), 'Admin role guard missing from deployed bundle');
   }
 
   const adminCookie = await login(baseUrl, adminEmail, adminPassword);
@@ -74,7 +80,6 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
   const suffix = Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
   const ownerEmail = `smoke-owner-${suffix}@example.invalid`;
   const ownerPassword = crypto.randomBytes(20).toString('base64url');
-
   let hotelId: string | null = null;
   let ownerId: string | null = null;
   let socket: Socket | null = null;
@@ -128,7 +133,6 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
     });
 
     const ownerCookie = await login(baseUrl, ownerEmail, ownerPassword);
-
     const ownerPlatform = await authenticatedGet(baseUrl, '/api/platform/hotels', ownerCookie);
     assert(ownerPlatform.status === 403, 'Non-admin user was able to access platform API');
 
@@ -137,7 +141,6 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
       extraHeaders: { Cookie: ownerCookie },
       reconnection: false,
     });
-
     await waitForSocket(socket);
 
     const liveEvent = new Promise<any>((resolve, reject) => {
@@ -158,7 +161,6 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
         items: [{ menuItemId: menuItem.id, quantity: 1 }],
       }),
     });
-
     const orderBody: any = await orderResponse.json();
     assert(orderResponse.ok && orderBody?.success, 'Public QR order request failed');
 
