@@ -36,7 +36,7 @@ export const getMenuItems = async (req: Request, res: Response): Promise<void> =
 
     res.status(200).json({
       success: true,
-       { menuItems },
+      data: { menuItems },
     });
   } catch (error) {
     console.error('Get menu items error:', error);
@@ -100,7 +100,7 @@ export const createMenuItem = async (req: AuthRequest, res: Response): Promise<v
 
     // Create menu item
     const menuItem = await prisma.menuItem.create({
-       {
+      data: {
         hotelId: req.user.hotelId,
         name,
         description,
@@ -114,13 +114,13 @@ export const createMenuItem = async (req: AuthRequest, res: Response): Promise<v
 
     // Log to audit
     await prisma.auditLog.create({
-       {
+      data: {
         userId: req.user.userId,
         action: 'MENU_ITEM_CREATED',
         resource: 'MenuItem',
         resourceId: menuItem.id,
         hotelId: req.user.hotelId,
-        meta {
+        metadata: {
           name,
           price,
           category,
@@ -130,7 +130,7 @@ export const createMenuItem = async (req: AuthRequest, res: Response): Promise<v
 
     res.status(201).json({
       success: true,
-       { menuItem },
+      data: { menuItem },
     });
   } catch (error) {
     console.error('Create menu item error:', error);
@@ -186,7 +186,7 @@ export const updateMenuItem = async (req: AuthRequest, res: Response): Promise<v
     // Update menu item
     const menuItem = await prisma.menuItem.update({
       where: { id },
-       {
+      data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
         ...(price && { price: parseFloat(price) }),
@@ -199,13 +199,13 @@ export const updateMenuItem = async (req: AuthRequest, res: Response): Promise<v
 
     // Log to audit
     await prisma.auditLog.create({
-       {
+      data: {
         userId: req.user.userId,
         action: 'MENU_ITEM_UPDATED',
         resource: 'MenuItem',
         resourceId: menuItem.id,
         hotelId: req.user.hotelId,
-        meta {
+        metadata: {
           changes: { name, description, price, category, isAvailable },
         },
       },
@@ -213,7 +213,7 @@ export const updateMenuItem = async (req: AuthRequest, res: Response): Promise<v
 
     res.status(200).json({
       success: true,
-       { menuItem },
+      data: { menuItem },
     });
   } catch (error) {
     console.error('Update menu item error:', error);
@@ -272,13 +272,13 @@ export const deleteMenuItem = async (req: AuthRequest, res: Response): Promise<v
 
     // Log to audit
     await prisma.auditLog.create({
-       {
+      data: {
         userId: req.user.userId,
         action: 'MENU_ITEM_DELETED',
         resource: 'MenuItem',
         resourceId: id,
         hotelId: req.user.hotelId,
-        meta {
+        metadata: {
           name: existingItem.name,
         },
       },
