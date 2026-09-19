@@ -7,10 +7,14 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 
 dotenv.config();
 
 import authRoutes from './routes/auth';
+import menuRoutes from './routes/menu';
+import billingRoutes from './routes/billing';
+import reportsRoutes from './routes/reports';
 import { testDatabaseConnection } from './config/database';
 import { 
   honeypotDetection, 
@@ -18,9 +22,11 @@ import {
   adminAccessLogger, 
   adminSessionSecurity 
 } from './middleware/adminSecurity';
+import { initializeSocket } from './socket';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const httpServer = createServer(app);
 
 // Security middleware
 app.use(helmet());
@@ -46,6 +52,9 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/menu', menuRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // Admin routes with enhanced security
 app.use('/api/platform', 
@@ -78,7 +87,10 @@ async function startServer() {
   try {
     await testDatabaseConnection();
 
-    app.listen(PORT, () => {
+    // Initialize Socket.io
+    initializeSocket(httpServer);
+
+    httpServer.listen(PORT, () => {
       console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
@@ -87,6 +99,7 @@ async function startServer() {
 ║   📍 Port: ${PORT}                                        ║
 ║   🌍 Environment: ${process.env.NODE_ENV || 'development'}                   ║
 ║   🔗 API: http://localhost:${PORT}/api                    ║
+║   🔌 Socket.io: ws://localhost:${PORT}                    ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
       `);

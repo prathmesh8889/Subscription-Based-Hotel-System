@@ -5,6 +5,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './components/DashboardLayout';
 
@@ -13,15 +14,18 @@ import { LoginPage } from './pages/LoginPage';
 import { SuperAdminLoginPage } from './pages/SuperAdminLoginPage';
 import { AdminHotelsPage } from './pages/admin/AdminHotelsPage';
 import { OwnerDashboard } from './pages/owner/OwnerDashboard';
-import { KitchenDashboardRealtime } from './pages/kitchen/KitchenDashboardRealtime';
+import { OwnerReports } from './pages/owner/OwnerReports';
+import { LiveOrders } from './pages/kitchen/LiveOrders';
 import { WaiterDashboard } from './pages/waiter/WaiterDashboard';
-import { CustomerOrderPage } from './pages/customer/CustomerOrderPage';
+import { WaiterBilling } from './pages/waiter/WaiterBilling';
+import { CustomerQRMenu } from './pages/customer/CustomerQRMenu';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <SocketProvider>
+          <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
           
@@ -29,8 +33,8 @@ function App() {
           <Route path="/platform/login" element={<SuperAdminLoginPage />} />
           
           {/* Customer QR Route (Public - No Auth Required) */}
-          <Route path="/customer/:hotelId" element={<CustomerOrderPage />} />
-          <Route path="/customer/demo" element={<Navigate to="/customer/demo-hotel" replace />} />
+          <Route path="/customer/:hotelId" element={<CustomerQRMenu />} />
+          <Route path="/customer/demo" element={<Navigate to="/customer/demo-hotel?table=demo-table&tableNumber=1" replace />} />
 
           {/* Super Admin Routes - Protected & Secret */}
           <Route
@@ -63,7 +67,7 @@ function App() {
             <Route path="staff" element={<OwnerDashboard />} />
             <Route path="orders" element={<OwnerDashboard />} />
             <Route path="billing" element={<OwnerDashboard />} />
-            <Route path="reports" element={<OwnerDashboard />} />
+            <Route path="reports" element={<OwnerReports />} />
           </Route>
 
           {/* Kitchen Staff Routes - Real-time Socket.IO */}
@@ -75,7 +79,7 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<KitchenDashboardRealtime />} />
+            <Route index element={<LiveOrders />} />
           </Route>
 
           {/* Waiter Routes */}
@@ -89,7 +93,7 @@ function App() {
           >
             <Route index element={<WaiterDashboard />} />
             <Route path="orders" element={<WaiterDashboard />} />
-            <Route path="billing" element={<WaiterDashboard />} />
+            <Route path="billing" element={<WaiterBilling />} />
           </Route>
 
           {/* Unauthorized Page */}
@@ -108,7 +112,8 @@ function App() {
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+          </Routes>
+        </SocketProvider>
       </AuthProvider>
     </BrowserRouter>
   );
