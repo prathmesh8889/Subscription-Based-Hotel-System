@@ -22,6 +22,10 @@ async function login(baseUrl: string, email: string, password: string): Promise<
   return setCookie.split(';')[0];
 }
 
+async function authenticatedGet(baseUrl: string, path: string, cookie: string) {
+  return fetch(baseUrl + path, { headers: { Cookie: cookie } });
+}
+
 function waitForSocket(socket: Socket): Promise<void> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Socket connection timed out')), 8000);
@@ -38,6 +42,7 @@ function waitForSocket(socket: Socket): Promise<void> {
 
 export async function runProductionSmokeTests(port: number): Promise<void> {
   const baseUrl = `http://127.0.0.1:${port}`;
+  const frontendUrl = process.env.FRONTEND_URL;
   const adminEmail = process.env.SUPER_ADMIN_EMAIL!;
   const adminPassword = process.env.SUPER_ADMIN_PASSWORD!;
 
@@ -45,7 +50,26 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
   const healthBody: any = await health.json();
   assert(health.ok && healthBody?.database === 'connected', 'Health endpoint/database check failed');
 
-  await login(baseUrl, adminEmail, adminPassword);
+  if (frontendUrl) {
+    for (const path of ['/platform/login', '/platform/dashboard', '/platform/hotels']) {
+      const response = await fetch(frontendUrl.replace(/\/$/, '') + path);
+      const html = await response.text();
+      assert(response.ok, 'Frontend route failed: ' + path);
+      assert(html.includes('id="root"'), 'Frontend SPA shell missing for: ' + path);
+    }
+  }
+
+  const adminCookie = await login(baseUrl, adminEmail, adminPassword);
+
+  const verify = await authenticatedGet(baseUrl, '/api/auth/verify', adminCookie);
+  const verifyBody: any = await verify.json();
+  assert(verify.ok && verifyBody?.data?.user?.role === 'SUPER_ADMIN', 'Admin session verification failed');
+
+  const platformHotels = await authenticatedGet(baseUrl, '/api/platform/hotels', adminCookie);
+  assert(platformHotels.ok, 'Admin dashboard data endpoint failed');
+
+  const anonymousPlatform = await fetch(baseUrl + '/api/platform/hotels');
+  assert(anonymousPlatform.status === 401 || anonymousPlatform.status === 403, 'Platform API is not protected');
 
   const suffix = Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
   const ownerEmail = `smoke-owner-${suffix}@example.invalid`;
@@ -53,9 +77,6 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
 
   let hotelId: string | null = null;
   let ownerId: string | null = null;
-  let tableId: string | null = null;
-  let menuItemId: string | null = null;
-  let orderId: string | null = null;
   let socket: Socket | null = null;
 
   try {
@@ -93,7 +114,6 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
         qrToken: crypto.randomBytes(32).toString('hex'),
       },
     });
-    tableId = table.id;
 
     const menuItem = await prisma.menuItem.create({
       data: {
@@ -106,9 +126,11 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
         prepTimeMinutes: 1,
       },
     });
-    menuItemId = menuItem.id;
 
     const ownerCookie = await login(baseUrl, ownerEmail, ownerPassword);
+
+    const ownerPlatform = await authenticatedGet(baseUrl, '/api/platform/hotels', ownerCookie);
+    assert(ownerPlatform.status === 403, 'Non-admin user was able to access platform API');
 
     socket = createSocket(baseUrl, {
       transports: ['websocket', 'polling'],
@@ -131,22 +153,21 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         hotelId,
-        tableId,
+        tableId: table.id,
         token: table.qrToken,
-        items: [{ menuItemId, quantity: 1 }],
+        items: [{ menuItemId: menuItem.id, quantity: 1 }],
       }),
     });
 
     const orderBody: any = await orderResponse.json();
     assert(orderResponse.ok && orderBody?.success, 'Public QR order request failed');
-    orderId = orderBody.data.orderId;
 
     const event = await liveEvent;
-    assert(event?.orderId === orderId, 'Socket.IO event did not match the created order');
+    assert(event?.orderId === orderBody.data.orderId, 'Socket.IO event did not match created order');
 
-    const savedOrder = await prisma.order.findUnique({ where: { id: orderId } });
+    const savedOrder = await prisma.order.findUnique({ where: { id: orderBody.data.orderId } });
     assert(savedOrder, 'Order was not persisted in PostgreSQL');
-    assert(Number(savedOrder.totalAmount) === 99, 'Server-side order total calculation is incorrect');
+    assert(Number(savedOrder.totalAmount) === 99, 'Server-side total is incorrect');
   } finally {
     if (socket) socket.disconnect();
     if (hotelId) {
