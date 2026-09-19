@@ -13,10 +13,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seed...\n');
 
-  // ============================================================
-  // CREATE SUPER ADMIN
-  // ============================================================
-
+  // Create Super Admin
   const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || 'admin@platform.com';
   const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || 'ChangeThisPassword123!';
 
@@ -46,10 +43,7 @@ async function main() {
     console.log('   ⚠️  Change this password immediately!\n');
   }
 
-  // ============================================================
-  // CREATE DEMO HOTEL
-  // ============================================================
-
+  // Create Demo Hotel
   const existingHotel = await prisma.hotel.findFirst({
     where: { name: 'Taj Palace Restaurant' },
   });
@@ -78,10 +72,7 @@ async function main() {
     console.log(`   Plan: ${hotel.subscriptionPlan}`);
     console.log(`   ID: ${hotel.id}\n`);
 
-    // ============================================================
-    // CREATE HOTEL OWNER
-    // ============================================================
-
+    // Create Hotel Owner
     const ownerPassword = 'Owner@123';
     const hashedOwnerPassword = await bcrypt.hash(ownerPassword, 10);
 
@@ -100,10 +91,7 @@ async function main() {
     console.log(`   Email: ${owner.email}`);
     console.log(`   Password: ${ownerPassword}\n`);
 
-    // ============================================================
-    // CREATE KITCHEN STAFF
-    // ============================================================
-
+    // Create Kitchen Staff
     const kitchenPassword = 'Kitchen@123';
     const hashedKitchenPassword = await bcrypt.hash(kitchenPassword, 10);
 
@@ -122,10 +110,7 @@ async function main() {
     console.log(`   Email: ${kitchen.email}`);
     console.log(`   Password: ${kitchenPassword}\n`);
 
-    // ============================================================
-    // CREATE WAITER
-    // ============================================================
-
+    // Create Waiter
     const waiterPassword = 'Waiter@123';
     const hashedWaiterPassword = await bcrypt.hash(waiterPassword, 10);
 

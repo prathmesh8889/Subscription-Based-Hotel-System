@@ -1,11 +1,11 @@
 // ============================================================
-// Login Page - JWT Authentication
+// LOGIN PAGE - Real Authentication
 // ============================================================
 
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UtensilsCrossed, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { UtensilsCrossed, Eye, EyeOff, AlertCircle, Loader } from 'lucide-react';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -15,54 +15,25 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = (location.state as any)?.from?.pathname || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
     const result = await login(email, password);
-    
+
     if (result.success) {
-      // Redirect based on role - check from stored user
-      const stored = sessionStorage.getItem('auth_user');
-      if (stored) {
-        const user = JSON.parse(stored);
-        switch (user.role) {
-          case 'SUPER_ADMIN':
-            navigate('/platform/dashboard');
-            break;
-          case 'OWNER':
-            navigate('/owner');
-            break;
-          case 'KITCHEN':
-            navigate('/kitchen');
-            break;
-          case 'WAITER':
-            navigate('/waiter');
-            break;
-          default:
-            navigate('/');
-        }
-      }
+      navigate(from, { replace: true });
     } else {
       setError(result.error || 'Login failed');
     }
-    
+
     setLoading(false);
   };
-
-  // Demo accounts - In production, these would be removed
-  // For demo purposes only - credentials shown for testing
-  const demoAccounts = [
-    { role: 'Super Admin', email: 'admin@platform.com', password: 'ChangeThisPassword123!' },
-    { role: 'Hotel Owner', email: 'owner@tajpalace.com', password: 'Owner@123' },
-    { role: 'Kitchen Staff', email: 'kitchen@tajpalace.com', password: 'Kitchen@123' },
-    { role: 'Waiter', email: 'waiter@tajpalace.com', password: 'Waiter@123' },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
@@ -98,6 +69,7 @@ export function LoginPage() {
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
                 placeholder="you@example.com"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -111,11 +83,13 @@ export function LoginPage() {
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all pr-10"
                   placeholder="••••••••"
                   required
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  disabled={loading}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -125,44 +99,28 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20"
+              className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (
+                <>
+                  <Loader size={18} className="animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </form>
-
-          {/* Demo Accounts */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Demo Accounts</p>
-            <div className="space-y-2">
-              {demoAccounts.map((account) => (
-                <button
-                  key={account.email}
-                  onClick={() => {
-                    setEmail(account.email);
-                    setPassword(account.password);
-                  }}
-                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">{account.role}</span>
-                    <p className="text-xs text-gray-500">{account.email}</p>
-                  </div>
-                  <span className="text-xs text-amber-600 font-mono">{account.password}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Customer QR Link */}
         <div className="text-center mt-6">
-          <Link
-            to="/customer/demo"
+          <a
+            href="/customer/demo"
             className="text-sm text-amber-400 hover:text-amber-300 transition-colors"
           >
             🍽️ Try Customer QR Experience →
-          </Link>
+          </a>
         </div>
       </div>
     </div>

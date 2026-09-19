@@ -1,8 +1,8 @@
 // ============================================================
-// Multi-Tenant Hotel/Restaurant Management System - Type Definitions
+// TYPE DEFINITIONS
 // ============================================================
 
-export type UserRole = 'SUPER_ADMIN' | 'OWNER' | 'KITCHEN' | 'WAITER' | 'CUSTOMER';
+export type UserRole = 'SUPER_ADMIN' | 'OWNER' | 'KITCHEN' | 'WAITER';
 
 export type PlanType = 'TRIAL' | 'STARTER' | 'PRO' | 'BUSINESS';
 
@@ -22,11 +22,15 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  password?: string; // In real app: hashed (not returned from API)
   role: UserRole;
   hotelId: string | null;
-  hotel_id?: string | null; // Alias for backward compatibility
-  avatar?: string;
+  hotel?: {
+    id: string;
+    name: string;
+    subscriptionPlan: string;
+    subscriptionEnd: string;
+    isActive: boolean;
+  };
 }
 
 export interface Hotel {

@@ -1,11 +1,10 @@
 // ============================================================
-// Dashboard Layout - Sidebar + Header
+// DASHBOARD LAYOUT - Sidebar + Header
 // ============================================================
 
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useData } from '../context/DataContext';
 import {
   LayoutDashboard, UtensilsCrossed, Table2, QrCode, Users,
   Receipt, ChefHat, ClipboardList, Building2, CreditCard,
@@ -14,14 +13,11 @@ import {
 
 export function DashboardLayout() {
   const { user, logout } = useAuth();
-  const { getCurrentHotel } = useData();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const hotel = getCurrentHotel();
-
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -79,10 +75,10 @@ export function DashboardLayout() {
               </div>
               <div>
                 <h1 className="font-bold text-sm">
-                  {user?.role === 'SUPER_ADMIN' ? 'SaaS Admin' : hotel?.name || 'Restaurant'}
+                  {user?.role === 'SUPER_ADMIN' ? 'SaaS Admin' : user?.hotel?.name || 'Restaurant'}
                 </h1>
                 <p className="text-xs text-slate-400">
-                  {user?.role === 'SUPER_ADMIN' ? 'Platform Management' : hotel?.plan_type + ' Plan'}
+                  {user?.role === 'SUPER_ADMIN' ? 'Platform Management' : user?.hotel?.subscriptionPlan + ' Plan'}
                 </p>
               </div>
             </div>
@@ -152,10 +148,10 @@ export function DashboardLayout() {
             </button>
             <div>
               <h2 className="font-semibold text-gray-800">
-                {user?.role === 'SUPER_ADMIN' ? 'Super Admin Panel' : hotel?.name}
+                {user?.role === 'SUPER_ADMIN' ? 'Super Admin Panel' : user?.hotel?.name}
               </h2>
-              {hotel && user?.role !== 'SUPER_ADMIN' && (
-                <p className="text-xs text-gray-500">{hotel.address}</p>
+              {user?.hotel && user?.role !== 'SUPER_ADMIN' && (
+                <p className="text-xs text-gray-500">{user.hotel.subscriptionPlan} Plan</p>
               )}
             </div>
           </div>

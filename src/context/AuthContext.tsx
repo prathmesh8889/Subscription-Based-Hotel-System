@@ -1,8 +1,8 @@
 // ============================================================
-// AUTH CONTEXT - Real API Integration
+// AUTH CONTEXT - Real API Integration with HttpOnly Cookies
 // ============================================================
-// Replaces mock data with real backend API calls
-// Uses sessionStorage for token storage (more secure than localStorage)
+// Uses HttpOnly cookies for secure JWT storage
+// No tokens in localStorage/sessionStorage
 // ============================================================
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
@@ -19,15 +19,21 @@ interface User {
   role: UserRole;
   hotelId: string | null;
   isActive: boolean;
+  hotel?: {
+    id: string;
+    name: string;
+    subscriptionPlan: string;
+    subscriptionEnd: string;
+    isActive: boolean;
+  };
 }
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
+  logout: () => Promise<void>;
   hasRole: (roles: UserRole[]) => boolean;
 }
 
@@ -42,105 +48,65 @@ const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing session on mount
+  // ============================================================
+  // VERIFY SESSION ON MOUNT
+  // ============================================================
+  // Check if user has valid session cookie
   useEffect(() => {
-    const storedToken = sessionStorage.getItem('auth_token');
-    const storedUser = sessionStorage.getItem('auth_user');
+    const verifySession = async () => {
+      try {
+        const response = await fetch(`${API_URL}/auth/verify`, {
+          method: 'GET',
+          credentials: 'include', // Include cookies
+        });
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data?.user) {
+            setUser(data.data.user);
+          }
+        }
+      } catch (error) {
+        console.error('Session verification failed:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    setIsLoading(false);
+    verifySession();
   }, []);
 
   // ============================================================
-  // LOGIN - Mock Authentication (Frontend Demo)
+  // LOGIN - Real API Call with HttpOnly Cookie
   // ============================================================
-  // In production, this would call the real backend API
-  // For demo purposes, we simulate authentication
 
   const login = useCallback(async (email: string, password: string) => {
     try {
       setIsLoading(true);
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies
+        body: JSON.stringify({ email, password }),
+      });
 
-      // Mock user database
-      const mockUsers: Record<string, { password: string; user: User }> = {
-        'admin@platform.com': {
-          password: 'ChangeThisPassword123!',
-          user: {
-            id: 'user-sa-1',
-            email: 'admin@platform.com',
-            name: 'Super Admin',
-            role: 'SUPER_ADMIN',
-            hotelId: null,
-            isActive: true,
-          },
-        },
-        'owner@tajpalace.com': {
-          password: 'Owner@123',
-          user: {
-            id: 'user-own-1',
-            email: 'owner@tajpalace.com',
-            name: 'Rajesh Kumar',
-            role: 'OWNER',
-            hotelId: 'hotel-1',
-            isActive: true,
-          },
-        },
-        'kitchen@tajpalace.com': {
-          password: 'Kitchen@123',
-          user: {
-            id: 'user-kit-1',
-            email: 'kitchen@tajpalace.com',
-            name: 'Chef Anil',
-            role: 'KITCHEN',
-            hotelId: 'hotel-1',
-            isActive: true,
-          },
-        },
-        'waiter@tajpalace.com': {
-          password: 'Waiter@123',
-          user: {
-            id: 'user-wait-1',
-            email: 'waiter@tajpalace.com',
-            name: 'Suresh',
-            role: 'WAITER',
-            hotelId: 'hotel-1',
-            isActive: true,
-          },
-        },
-      };
+      const data = await response.json();
 
-      // Validate credentials
-      const userRecord = mockUsers[email];
-      if (!userRecord || userRecord.password !== password) {
-        return { success: false, error: 'Invalid email or password' };
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Login failed' };
       }
 
-      if (!userRecord.user.isActive) {
-        return { success: false, error: 'Account is deactivated' };
+      if (data.success && data.data?.user) {
+        setUser(data.data.user);
+        return { success: true };
       }
 
-      // Generate mock JWT token
-      const mockToken = `mock_jwt_${userRecord.user.id}_${Date.now()}`;
-
-      // Store in session storage
-      sessionStorage.setItem('auth_token', mockToken);
-      sessionStorage.setItem('auth_user', JSON.stringify(userRecord.user));
-
-      // Update state
-      setToken(mockToken);
-      setUser(userRecord.user);
-
-      return { success: true };
+      return { success: false, error: 'Login failed' };
     } catch (error: any) {
       console.error('Login error:', error);
       return { success: false, error: 'Network error. Please try again.' };
@@ -150,17 +116,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ============================================================
-  // LOGOUT
+  // LOGOUT - Clear Cookie via API
   // ============================================================
 
-  const logout = useCallback(() => {
-    // Clear storage
-    sessionStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_user');
-
-    // Clear state
-    setToken(null);
-    setUser(null);
+  const logout = useCallback(async () => {
+    try {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include', // Include cookies
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+    }
   }, []);
 
   // ============================================================
@@ -179,7 +148,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        token,
         isAuthenticated: !!user,
         isLoading,
         login,
@@ -200,25 +168,22 @@ export function useAuth() {
   return context;
 }
 
-// Helper function for API calls with authentication
-export async function apiCall(endpoint: string, options: RequestInit = {}) {
-  const token = sessionStorage.getItem('auth_token');
-  
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
-  };
+// ============================================================
+// API HELPER - Include Credentials for Cookie Auth
+// ============================================================
 
+export async function apiCall(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers,
+    credentials: 'include', // Always include cookies
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   });
 
   if (response.status === 401) {
-    // Token expired or invalid
-    sessionStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_user');
+    // Session expired or invalid
     window.location.href = '/login';
     throw new Error('Unauthorized');
   }

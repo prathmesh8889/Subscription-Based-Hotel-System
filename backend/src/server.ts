@@ -5,40 +5,25 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
-import rateLimit from 'express-rate-limit';
 
-// Load environment variables
 dotenv.config();
 
-// Import routes
 import authRoutes from './routes/auth';
-import platformRoutes from './routes/platform';
-import staffRoutes from './routes/staff';
-
-// Import database
 import { testDatabaseConnection } from './config/database';
-
-// Import admin security middleware
 import { 
+  honeypotDetection, 
   ipWhitelist, 
-  adminLoginRateLimit, 
   adminAccessLogger, 
-  honeypotDetection,
   adminSessionSecurity 
 } from './middleware/adminSecurity';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ============================================================
-// SECURITY MIDDLEWARE
-// ============================================================
-
-// Helmet - Security headers
+// Security middleware
 app.use(helmet());
-
-// CORS - Cross-origin resource sharing
 app.use(
   cors({
     origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
@@ -46,25 +31,9 @@ app.use(
   })
 );
 
-// Body parsing
+app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-
-// Rate limiting
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
-  message: {
-    success: false,
-    error: 'Too many requests. Please try again later.',
-  },
-});
-
-app.use('/api/', apiLimiter);
-
-// ============================================================
-// ROUTES
-// ============================================================
 
 // Health check
 app.get('/health', (req, res) => {
@@ -80,15 +49,12 @@ app.use('/api/auth', authRoutes);
 
 // Admin routes with enhanced security
 app.use('/api/platform', 
-  honeypotDetection,        // Detect suspicious probes
-  ipWhitelist,              // IP whitelist (if configured)
-  adminAccessLogger,        // Log all admin access
-  adminSessionSecurity,     // Additional session security
-  platformRoutes
+  honeypotDetection,
+  ipWhitelist,
+  adminAccessLogger,
+  adminSessionSecurity,
+  authRoutes // Placeholder - will add platform routes later
 );
-
-// Staff routes
-app.use('/api/staff', staffRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -107,16 +73,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// ============================================================
-// START SERVER
-// ============================================================
-
+// Start server
 async function startServer() {
   try {
-    // Test database connection
     await testDatabaseConnection();
 
-    // Start server
     app.listen(PORT, () => {
       console.log(`
 ╔═══════════════════════════════════════════════════════════╗

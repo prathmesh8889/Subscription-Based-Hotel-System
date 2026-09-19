@@ -3,36 +3,25 @@
 // ============================================================
 
 import express from 'express';
-import {
-  register,
-  login,
-  getCurrentUser,
-  changePassword,
-} from '../controllers/authController';
+import { register, login, getCurrentUser, verifySession, logout } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
-import { adminLoginRateLimit } from '../middleware/adminSecurity';
 import rateLimit from 'express-rate-limit';
 
 const router = express.Router();
 
-// Rate limiting for auth endpoints
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 attempts per window
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   message: {
     success: false,
     error: 'Too many attempts. Please try again later.',
   },
 });
 
-// Public routes
 router.post('/register', authLimiter, register);
-
-// Login with enhanced security for admin attempts
-router.post('/login', authLimiter, adminLoginRateLimit, login);
-
-// Protected routes
+router.post('/login', authLimiter, login);
+router.get('/verify', verifySession);
+router.post('/logout', logout);
 router.get('/me', authenticateToken, getCurrentUser);
-router.put('/change-password', authenticateToken, changePassword);
 
 export default router;
