@@ -175,7 +175,7 @@ export const setupSocketHandlers = (io: SocketServer) => {
 
         // Create order in database
         const order = await prisma.order.create({
-           {
+          data: {
             hotelId: socket.hotelId,
             tableId: data.tableId,
             items: data.items,
@@ -190,7 +190,7 @@ export const setupSocketHandlers = (io: SocketServer) => {
         // Update table status to OCCUPIED
         await prisma.table.update({
           where: { id: data.tableId },
-           { status: 'OCCUPIED' },
+          data: { status: 'OCCUPIED' },
         });
 
         // Emit to all users in hotel room
@@ -207,13 +207,13 @@ export const setupSocketHandlers = (io: SocketServer) => {
 
         // Log to audit
         await prisma.auditLog.create({
-           {
+          data: {
             userId: socket.userId,
             action: 'ORDER_CREATED',
             resource: 'Order',
             resourceId: order.id,
             hotelId: socket.hotelId,
-            meta {
+            metadata: {
               tableId: data.tableId,
               totalAmount: data.totalAmount,
               itemCount: data.items.length,
@@ -278,7 +278,7 @@ export const setupSocketHandlers = (io: SocketServer) => {
         // Update order status
         const updatedOrder = await prisma.order.update({
           where: { id: data.orderId },
-           {
+          data: {
             status: data.status,
             handledBy: socket.userId,
           },
@@ -288,7 +288,7 @@ export const setupSocketHandlers = (io: SocketServer) => {
         if (data.status === 'SERVED') {
           await prisma.table.update({
             where: { id: order.tableId },
-             { status: 'AVAILABLE' },
+            data: { status: 'AVAILABLE' },
           });
         }
 
@@ -303,13 +303,13 @@ export const setupSocketHandlers = (io: SocketServer) => {
 
         // Log to audit
         await prisma.auditLog.create({
-           {
+          data: {
             userId: socket.userId,
             action: 'ORDER_STATUS_UPDATED',
             resource: 'Order',
             resourceId: data.orderId,
             hotelId: socket.hotelId,
-            meta {
+            metadata: {
               oldStatus: order.status,
               newStatus: data.status,
             },
@@ -362,7 +362,7 @@ export const setupSocketHandlers = (io: SocketServer) => {
             id: data.orderId,
             hotelId: socket.hotelId,
           },
-           {
+          data: {
             paymentStatus: 'PAID',
             paymentMethod: data.paymentMethod,
           },
