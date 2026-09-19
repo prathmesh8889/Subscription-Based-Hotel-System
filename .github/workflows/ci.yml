@@ -1,0 +1,26 @@
+name: CI
+on:
+  push:
+    branches: [main, fix/fullstack-production-ready]
+  pull_request:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run build:frontend
+      - run: npm install
+        working-directory: backend
+      - run: npx prisma validate
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://u:p@localhost:5432/db
+      - run: npm run build
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://u:p@localhost:5432/db
