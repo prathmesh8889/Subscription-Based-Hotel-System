@@ -12,7 +12,7 @@ import { AuthRequest } from '../middleware/auth';
 // GET REVENUE REPORT
 // ============================================================
 
-export const getRevenueReport = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getRevenueReport = async (req: any, res: Response): Promise<void> => {
   try {
     const { hotelId, startDate, endDate, groupBy = 'day' } = req.query;
 
@@ -138,7 +138,7 @@ export const getRevenueReport = async (req: AuthRequest, res: Response): Promise
 // GET ORDER ANALYTICS
 // ============================================================
 
-export const getOrderAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getOrderAnalytics = async (req: any, res: Response): Promise<void> => {
   try {
     const { hotelId, startDate, endDate } = req.query;
 
@@ -242,7 +242,7 @@ export const getOrderAnalytics = async (req: AuthRequest, res: Response): Promis
 // GET TOP SELLING ITEMS
 // ============================================================
 
-export const getTopSellingItems = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getTopSellingItems = async (req: any, res: Response): Promise<void> => {
   try {
     const { hotelId, startDate, endDate, limit = 10 } = req.query;
 
@@ -346,7 +346,7 @@ export const getTopSellingItems = async (req: AuthRequest, res: Response): Promi
 // GET PAYMENT METHOD BREAKDOWN
 // ============================================================
 
-export const getPaymentBreakdown = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getPaymentBreakdown = async (req: any, res: Response): Promise<void> => {
   try {
     const { hotelId, startDate, endDate } = req.query;
 
@@ -449,7 +449,7 @@ export const getPaymentBreakdown = async (req: AuthRequest, res: Response): Prom
 // GET TABLE UTILIZATION
 // ============================================================
 
-export const getTableUtilization = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getTableUtilization = async (req: any, res: Response): Promise<void> => {
   try {
     const { hotelId, startDate, endDate } = req.query;
 

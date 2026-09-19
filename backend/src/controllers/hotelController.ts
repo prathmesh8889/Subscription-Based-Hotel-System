@@ -173,7 +173,7 @@ export const createHotelAndOwner = async (
 // GET ALL HOTELS (Super Admin Only)
 // ============================================================
 
-export const getAllHotels = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAllHotels = async (req: any, res: Response): Promise<void> => {
   try {
     if (req.user?.role !== 'SUPER_ADMIN') {
       res.status(403).json({

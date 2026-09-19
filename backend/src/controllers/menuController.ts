@@ -51,7 +51,7 @@ export const getMenuItems = async (req: Request, res: Response): Promise<void> =
 // CREATE MENU ITEM (Owner only)
 // ============================================================
 
-export const createMenuItem = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createMenuItem = async (req: any, res: Response): Promise<void> => {
   try {
     const { name, description, price, category, imageUrl, sortOrder } = req.body;
 
@@ -145,7 +145,7 @@ export const createMenuItem = async (req: AuthRequest, res: Response): Promise<v
 // UPDATE MENU ITEM (Owner only)
 // ============================================================
 
-export const updateMenuItem = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateMenuItem = async (req: any, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const { name, description, price, category, imageUrl, isAvailable, sortOrder } = req.body;
@@ -228,7 +228,7 @@ export const updateMenuItem = async (req: AuthRequest, res: Response): Promise<v
 // DELETE MENU ITEM (Owner only)
 // ============================================================
 
-export const deleteMenuItem = async (req: AuthRequest, res: Response): Promise<void> => {
+export const deleteMenuItem = async (req: any, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 

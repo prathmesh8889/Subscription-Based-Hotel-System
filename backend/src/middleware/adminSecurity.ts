@@ -72,12 +72,6 @@ export const adminLoginRateLimit = async (req: Request, res: Response, next: Nex
     const recentAttempts = await prisma.auditLog.count({
       where: {
         action: 'ADMIN_LOGIN_FAILED',
-        metadata: {
-          path: {
-            path: ['email'],
-            equals: email,
-          },
-        },
         createdAt: {
           gte: new Date(Date.now() - LOCKOUT_DURATION),
         },

@@ -30,7 +30,7 @@ const generateBillNumber = (): string => {
 // GET UNPAID ORDERS
 // ============================================================
 
-export const getUnpaidOrders = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getUnpaidOrders = async (req: any, res: Response): Promise<void> => {
   try {
     const { hotelId } = req.query;
 
@@ -96,7 +96,7 @@ export const getUnpaidOrders = async (req: AuthRequest, res: Response): Promise<
 // GENERATE INVOICE
 // ============================================================
 
-export const generateInvoice = async (req: AuthRequest, res: Response): Promise<void> => {
+export const generateInvoice = async (req: any, res: Response): Promise<void> => {
   try {
     const { orderId } = req.params;
 
@@ -219,7 +219,7 @@ export const generateInvoice = async (req: AuthRequest, res: Response): Promise<
 // PROCESS PAYMENT
 // ============================================================
 
-export const processPayment = async (req: AuthRequest, res: Response): Promise<void> => {
+export const processPayment = async (req: any, res: Response): Promise<void> => {
   try {
     const { orderId } = req.params;
     const { paymentMethod } = req.body;
@@ -326,7 +326,7 @@ export const processPayment = async (req: AuthRequest, res: Response): Promise<v
 // GET BILLING SUMMARY
 // ============================================================
 
-export const getBillingSummary = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getBillingSummary = async (req: any, res: Response): Promise<void> => {
   try {
     const { hotelId, startDate, endDate } = req.query;
 
