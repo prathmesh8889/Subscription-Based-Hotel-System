@@ -1,9 +1,11 @@
 // ============================================================
-// SOCKET CONTEXT - Real-time Order Updates
+// SOCKET CONTEXT - Mock Real-time Order Updates
+// ============================================================
+// Works without backend - uses local state
+// For production, replace with real Socket.io connection
 // ============================================================
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { io, Socket } from 'socket.io-client';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
 // ============================================================
@@ -34,7 +36,7 @@ interface Order {
 }
 
 interface SocketContextType {
-  socket: Socket | null;
+  socket: null;
   isConnected: boolean;
   orders: Order[];
   placeOrder: (data: {
@@ -51,193 +53,91 @@ interface SocketContextType {
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 // ============================================================
-// SOCKET PROVIDER
+// SOCKET PROVIDER (Mock Implementation)
 // ============================================================
-
-const SOCKET_URL = (import.meta as any).env?.VITE_SOCKET_URL || 'http://localhost:5000';
 
 export function SocketProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuth();
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
 
-  // ============================================================
-  // CONNECT TO SOCKET
-  // ============================================================
-
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      return;
-    }
-
-    // Get token from cookie (we'll need to pass it to socket)
-    // For now, we'll use a workaround - the backend will read from cookies
-    const socketInstance = io(SOCKET_URL, {
-      auth: {
-        // We'll need to get the token somehow
-        // For now, we'll use a placeholder - in production, get from cookie
-        token: 'placeholder', // TODO: Get from cookie
-      },
-      withCredentials: true,
-    });
-
-    // ============================================================
-    // CONNECTION EVENTS
-    // ============================================================
-
-    socketInstance.on('connect', () => {
-      console.log('✅ Socket connected');
-      setIsConnected(true);
-    });
-
-    socketInstance.on('disconnect', () => {
-      console.log('❌ Socket disconnected');
-      setIsConnected(false);
-    });
-
-    socketInstance.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-      setIsConnected(false);
-    });
-
-    // ============================================================
-    // ORDER EVENTS
-    // ============================================================
-
-    socketInstance.on('new_order', (order: Order) => {
-      console.log('📦 New order received:', order);
-      setOrders(prev => [order, ...prev]);
-    });
-
-    socketInstance.on('order_status_updated', (data: { orderId: string; status: Order['status']; handledBy?: string; updatedAt: string }) => {
-      console.log('🔄 Order status updated:', data);
-      setOrders(prev =>
-        prev.map(order =>
-          order.orderId === data.orderId
-            ? { ...order, status: data.status, handledBy: data.handledBy, updatedAt: data.updatedAt }
-            : order
-        )
-      );
-    });
-
-    socketInstance.on('payment_status_updated', (data: { orderId: string; paymentStatus: string; paymentMethod?: string }) => {
-      console.log('💳 Payment status updated:', data);
-      setOrders(prev =>
-        prev.map(order =>
-          order.orderId === data.orderId
-            ? { ...order, paymentStatus: data.paymentStatus as any, paymentMethod: data.paymentMethod as any }
-            : order
-        )
-      );
-    });
-
-    socketInstance.on('user_joined', (data: { userId: string; role: string }) => {
-      console.log('👤 User joined:', data);
-    });
-
-    socketInstance.on('user_left', (data: { userId: string }) => {
-      console.log('👋 User left:', data);
-    });
-
-    setSocket(socketInstance);
-
-    // Cleanup
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, [isAuthenticated, user]);
+  // Mock connection - always "connected" in demo mode
+  const isConnected = isAuthenticated;
 
   // ============================================================
-  // PLACE ORDER
+  // PLACE ORDER (Mock)
   // ============================================================
 
-  const placeOrder = async (data: {
+  const placeOrder = useCallback(async (data: {
     tableId: string;
     tableNumber: number;
     items: OrderItem[];
     totalAmount: number;
     notes?: string;
   }): Promise<{ success: boolean; orderId?: string; error?: string }> => {
-    return new Promise((resolve) => {
-      if (!socket || !user?.hotelId) {
-        resolve({ success: false, error: 'Not connected' });
-        return;
-      }
+    if (!user?.hotelId) {
+      return { success: false, error: 'Not authenticated' };
+    }
 
-      socket.emit(
-        'new_order',
-        {
-          hotelId: user.hotelId,
-          ...data,
-        },
-        (response: any) => {
-          resolve(response);
-        }
-      );
-    });
-  };
+    const newOrder: Order = {
+      orderId: `order-${Date.now()}`,
+      hotelId: user.hotelId,
+      tableId: data.tableId,
+      tableNumber: data.tableNumber,
+      items: data.items,
+      totalAmount: data.totalAmount,
+      status: 'PENDING',
+      paymentStatus: 'UNPAID',
+      createdAt: new Date().toISOString(),
+      notes: data.notes,
+    };
+
+    setOrders(prev => [newOrder, ...prev]);
+
+    return { success: true, orderId: newOrder.orderId };
+  }, [user]);
 
   // ============================================================
-  // UPDATE ORDER STATUS
+  // UPDATE ORDER STATUS (Mock)
   // ============================================================
 
-  const updateOrderStatus = async (
+  const updateOrderStatus = useCallback(async (
     orderId: string,
     status: Order['status']
   ): Promise<{ success: boolean; error?: string }> => {
-    return new Promise((resolve) => {
-      if (!socket || !user?.hotelId) {
-        resolve({ success: false, error: 'Not connected' });
-        return;
-      }
+    setOrders(prev =>
+      prev.map(order =>
+        order.orderId === orderId
+          ? { ...order, status, updatedAt: new Date().toISOString(), handledBy: user?.id }
+          : order
+      )
+    );
 
-      socket.emit(
-        'update_order_status',
-        {
-          orderId,
-          hotelId: user.hotelId,
-          status,
-        },
-        (response: any) => {
-          resolve(response);
-        }
-      );
-    });
-  };
+    return { success: true };
+  }, [user]);
 
   // ============================================================
-  // UPDATE PAYMENT STATUS
+  // UPDATE PAYMENT STATUS (Mock)
   // ============================================================
 
-  const updatePaymentStatus = async (
+  const updatePaymentStatus = useCallback(async (
     orderId: string,
     paymentMethod: 'CASH' | 'UPI' | 'CARD'
   ): Promise<{ success: boolean; error?: string }> => {
-    return new Promise((resolve) => {
-      if (!socket || !user?.hotelId) {
-        resolve({ success: false, error: 'Not connected' });
-        return;
-      }
+    setOrders(prev =>
+      prev.map(order =>
+        order.orderId === orderId
+          ? { ...order, paymentStatus: 'PAID', paymentMethod, updatedAt: new Date().toISOString() }
+          : order
+      )
+    );
 
-      socket.emit(
-        'update_payment_status',
-        {
-          orderId,
-          hotelId: user.hotelId,
-          paymentMethod,
-        },
-        (response: any) => {
-          resolve(response);
-        }
-      );
-    });
-  };
+    return { success: true };
+  }, []);
 
   return (
     <SocketContext.Provider
       value={{
-        socket,
+        socket: null,
         isConnected,
         orders,
         placeOrder,
