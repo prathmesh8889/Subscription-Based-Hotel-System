@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Eye, EyeOff, AlertCircle, Loader } from 'lucide-react';
+import { Shield, Eye, EyeOff, AlertCircle, Loader, Info } from 'lucide-react';
 
 export function SuperAdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -13,7 +13,7 @@ export function SuperAdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isDemoMode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -51,6 +51,17 @@ export function SuperAdminLoginPage() {
         <div className="bg-white rounded-2xl shadow-xl p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-1">Secure Login</h2>
           <p className="text-sm text-gray-500 mb-6">Restricted access area</p>
+
+          {/* Demo Mode Indicator */}
+          {isDemoMode && (
+            <div className="flex items-center gap-2 p-3 mb-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
+              <Info size={16} />
+              <div>
+                <p className="font-medium">Demo Mode</p>
+                <p className="text-xs mt-0.5">Using test data. Backend not connected.</p>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -111,6 +122,28 @@ export function SuperAdminLoginPage() {
               )}
             </button>
           </form>
+
+          {/* Test Credentials (Demo Mode Only) */}
+          {isDemoMode && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+                Test Credentials
+              </p>
+              <button
+                onClick={() => {
+                  setEmail('admin@platform.com');
+                  setPassword('ChangeThisPassword123!');
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <div>
+                  <span className="text-sm font-medium text-gray-700">Super Admin</span>
+                  <p className="text-xs text-gray-500">admin@platform.com</p>
+                </div>
+                <span className="text-xs text-purple-600 font-mono">ChangeThisPassword123!</span>
+              </button>
+            </div>
+          )}
 
           {/* Security Notice */}
           <div className="mt-6 pt-6 border-t border-gray-200">
