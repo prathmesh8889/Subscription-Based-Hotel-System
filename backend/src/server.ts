@@ -17,6 +17,8 @@ import authRoutes from './routes/auth';
 import menuRoutes from './routes/menu';
 import billingRoutes from './routes/billing';
 import reportsRoutes from './routes/reports';
+import platformRoutes from './routes/platform';
+import staffRoutes from './routes/staff';
 
 // Import database config
 import { testDatabaseConnection } from './config/database';
@@ -63,6 +65,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/staff', staffRoutes);
 
 // Admin routes with enhanced security
 app.use('/api/platform', 
@@ -70,7 +73,7 @@ app.use('/api/platform',
   ipWhitelist,
   adminAccessLogger,
   adminSessionSecurity,
-  authRoutes // Placeholder - will add platform routes later
+  platformRoutes
 );
 
 // 404 handler
