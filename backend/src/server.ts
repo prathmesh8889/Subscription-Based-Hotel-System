@@ -100,14 +100,27 @@ async function ensureSuperAdmin() {
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
+  const hashedPassword = await bcrypt.hash(password, 12);
+
   if (existing) {
     if (existing.role !== 'SUPER_ADMIN') {
       throw new Error('SUPER_ADMIN_EMAIL belongs to a non-super-admin account');
     }
+
+    const passwordMatches = await bcrypt.compare(password, existing.password);
+    if (!passwordMatches || !existing.isActive) {
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          password: hashedPassword,
+          isActive: true,
+        },
+      });
+      console.log('✅ Super-admin credentials synchronized from Render environment');
+    }
     return;
   }
 
-  const hashedPassword = await bcrypt.hash(password, 12);
   await prisma.user.create({
     data: {
       email,
