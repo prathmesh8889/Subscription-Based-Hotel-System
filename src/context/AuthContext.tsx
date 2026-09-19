@@ -1,8 +1,8 @@
 // ============================================================
-// AUTH CONTEXT - Real API Integration with HttpOnly Cookies
+// AUTH CONTEXT - Mock Authentication (Demo Mode)
 // ============================================================
-// Uses HttpOnly cookies for secure JWT storage
-// No tokens in localStorage/sessionStorage
+// Works without backend - uses localStorage for session
+// For production, replace with real API calls
 // ============================================================
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
@@ -39,8 +39,69 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// API base URL - use environment variable or default to localhost
-const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
+// ============================================================
+// MOCK USERS DATABASE
+// ============================================================
+
+const MOCK_USERS = [
+  {
+    id: 'user-sa-1',
+    email: 'admin@platform.com',
+    password: 'ChangeThisPassword123!',
+    name: 'Platform Admin',
+    role: 'SUPER_ADMIN' as UserRole,
+    hotelId: null,
+    isActive: true,
+  },
+  {
+    id: 'user-own-1',
+    email: 'owner@tajpalace.com',
+    password: 'Owner@123',
+    name: 'Rajesh Kumar',
+    role: 'OWNER' as UserRole,
+    hotelId: 'hotel-1',
+    isActive: true,
+    hotel: {
+      id: 'hotel-1',
+      name: 'Taj Palace Restaurant',
+      subscriptionPlan: 'PRO',
+      subscriptionEnd: '2026-12-31',
+      isActive: true,
+    },
+  },
+  {
+    id: 'user-kit-1',
+    email: 'kitchen@tajpalace.com',
+    password: 'Kitchen@123',
+    name: 'Chef Anil',
+    role: 'KITCHEN' as UserRole,
+    hotelId: 'hotel-1',
+    isActive: true,
+    hotel: {
+      id: 'hotel-1',
+      name: 'Taj Palace Restaurant',
+      subscriptionPlan: 'PRO',
+      subscriptionEnd: '2026-12-31',
+      isActive: true,
+    },
+  },
+  {
+    id: 'user-wait-1',
+    email: 'waiter@tajpalace.com',
+    password: 'Waiter@123',
+    name: 'Suresh',
+    role: 'WAITER' as UserRole,
+    hotelId: 'hotel-1',
+    isActive: true,
+    hotel: {
+      id: 'hotel-1',
+      name: 'Taj Palace Restaurant',
+      subscriptionPlan: 'PRO',
+      subscriptionEnd: '2026-12-31',
+      isActive: true,
+    },
+  },
+];
 
 // ============================================================
 // AUTH PROVIDER
@@ -53,83 +114,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ============================================================
   // VERIFY SESSION ON MOUNT
   // ============================================================
-  // Check if user has valid session cookie
+  // Check localStorage for existing session
   useEffect(() => {
-    const verifySession = async () => {
+    const storedUser = localStorage.getItem('auth_user');
+    if (storedUser) {
       try {
-        const response = await fetch(`${API_URL}/auth/verify`, {
-          method: 'GET',
-          credentials: 'include', // Include cookies
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.data?.user) {
-            setUser(data.data.user);
-          }
-        }
+        setUser(JSON.parse(storedUser));
       } catch (error) {
-        console.error('Session verification failed:', error);
-      } finally {
-        setIsLoading(false);
+        console.error('Failed to parse stored user:', error);
+        localStorage.removeItem('auth_user');
       }
-    };
-
-    verifySession();
+    }
+    setIsLoading(false);
   }, []);
 
   // ============================================================
-  // LOGIN - Real API Call with HttpOnly Cookie
+  // LOGIN - Mock Authentication
   // ============================================================
 
   const login = useCallback(async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies
-        body: JSON.stringify({ email, password }),
-      });
+    const mockUser = MOCK_USERS.find(u => u.email === email && u.password === password);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return { success: false, error: data.error || 'Login failed' };
-      }
-
-      if (data.success && data.data?.user) {
-        setUser(data.data.user);
-        return { success: true };
-      }
-
-      return { success: false, error: 'Login failed' };
-    } catch (error: any) {
-      console.error('Login error:', error);
-      return { success: false, error: 'Network error. Please try again.' };
-    } finally {
-      setIsLoading(false);
+    if (!mockUser) {
+      return { success: false, error: 'Invalid email or password' };
     }
+
+    if (!mockUser.isActive) {
+      return { success: false, error: 'Account is deactivated' };
+    }
+
+    // Store user in localStorage (excluding password)
+    const { password: _, ...userWithoutPassword } = mockUser;
+    localStorage.setItem('auth_user', JSON.stringify(userWithoutPassword));
+    setUser(userWithoutPassword);
+
+    return { success: true };
   }, []);
 
   // ============================================================
-  // LOGOUT - Clear Cookie via API
+  // LOGOUT - Clear localStorage
   // ============================================================
 
   const logout = useCallback(async () => {
-    try {
-      await fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include', // Include cookies
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setUser(null);
-    }
+    localStorage.removeItem('auth_user');
+    setUser(null);
   }, []);
 
   // ============================================================
@@ -169,24 +200,18 @@ export function useAuth() {
 }
 
 // ============================================================
-// API HELPER - Include Credentials for Cookie Auth
+// API HELPER - Mock Implementation
+// ============================================================
+// For production, replace with real API calls
 // ============================================================
 
 export async function apiCall(endpoint: string, options: RequestInit = {}) {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    credentials: 'include', // Always include cookies
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-  if (response.status === 401) {
-    // Session expired or invalid
-    window.location.href = '/login';
-    throw new Error('Unauthorized');
-  }
-
-  return response;
+  // Mock implementation - returns success for all calls
+  console.log('API Call (mock):', endpoint, options);
+  
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({ success: true, data: {} }),
+  } as Response;
 }

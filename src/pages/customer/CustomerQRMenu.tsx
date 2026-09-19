@@ -37,7 +37,7 @@ export function CustomerQRMenu() {
   const [error, setError] = useState<string | null>(null);
 
   // ============================================================
-  // VALIDATE TABLE & FETCH MENU
+  // VALIDATE TABLE & FETCH MENU (Mock)
   // ============================================================
 
   useEffect(() => {
@@ -48,28 +48,123 @@ export function CustomerQRMenu() {
         return;
       }
 
-      try {
-        // Fetch menu items for this hotel
-        const response = await fetch(`http://localhost:5000/api/menu?hotelId=${hotelId}`, {
-          credentials: 'include',
-        });
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch menu');
-        }
+      // Mock menu items
+      const mockMenuItems: MenuItem[] = [
+        {
+          id: '1',
+          name: 'Butter Chicken',
+          description: 'Creamy tomato-based curry with tender chicken pieces',
+          price: 320,
+          category: 'Main Course',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '2',
+          name: 'Paneer Tikka',
+          description: 'Grilled cottage cheese marinated in spices',
+          price: 280,
+          category: 'Starters',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '3',
+          name: 'Biryani',
+          description: 'Fragrant basmati rice with aromatic spices',
+          price: 350,
+          category: 'Rice',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '4',
+          name: 'Garlic Naan',
+          description: 'Freshly baked bread with garlic butter',
+          price: 70,
+          category: 'Breads',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '5',
+          name: 'Masala Dosa',
+          description: 'Crispy rice crepe with spiced potato filling',
+          price: 180,
+          category: 'South Indian',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '6',
+          name: 'Chicken Tikka',
+          description: 'Grilled chicken marinated in yogurt and spices',
+          price: 300,
+          category: 'Starters',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '7',
+          name: 'Veg Biryani',
+          description: 'Aromatic rice with mixed vegetables',
+          price: 260,
+          category: 'Rice',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '8',
+          name: 'Dal Makhani',
+          description: 'Creamy black lentils slow-cooked overnight',
+          price: 200,
+          category: 'Main Course',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '9',
+          name: 'Raita',
+          description: 'Yogurt with fresh vegetables and spices',
+          price: 50,
+          category: 'Sides',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '10',
+          name: 'Gulab Jamun',
+          description: 'Sweet milk dumplings in sugar syrup',
+          price: 100,
+          category: 'Desserts',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '11',
+          name: 'Coffee',
+          description: 'Freshly brewed South Indian filter coffee',
+          price: 80,
+          category: 'Beverages',
+          imageUrl: '',
+          isAvailable: true,
+        },
+        {
+          id: '12',
+          name: 'Mango Lassi',
+          description: 'Refreshing yogurt drink with mango pulp',
+          price: 120,
+          category: 'Beverages',
+          imageUrl: '',
+          isAvailable: true,
+        },
+      ];
 
-        const data = await response.json();
-        
-        if (data.success) {
-          setMenuItems(data.data.menuItems.filter((item: MenuItem) => item.isAvailable));
-        } else {
-          setError('Failed to load menu');
-        }
-      } catch (err) {
-        setError('Failed to load menu. Please try again.');
-      } finally {
-        setLoading(false);
-      }
+      setMenuItems(mockMenuItems);
+      setLoading(false);
     };
 
     validateAndFetch();

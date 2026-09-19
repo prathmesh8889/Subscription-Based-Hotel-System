@@ -50,7 +50,7 @@ export function OwnerReports() {
   const [paymentBreakdown, setPaymentBreakdown] = useState<PaymentBreakdown | null>(null);
 
   // ============================================================
-  // FETCH REPORTS
+  // FETCH REPORTS (Mock)
   // ============================================================
 
   useEffect(() => {
@@ -64,49 +64,60 @@ export function OwnerReports() {
 
     setLoading(true);
 
-    const endDate = new Date().toISOString();
-    const startDate = new Date(Date.now() - Number(dateRange) * 24 * 60 * 60 * 1000).toISOString();
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    try {
-      // Fetch all reports in parallel
-      const [revenueRes, topItemsRes, paymentRes] = await Promise.all([
-        fetch(
-          `http://localhost:5000/api/reports/revenue?hotelId=${user.hotelId}&startDate=${startDate}&endDate=${endDate}&groupBy=day`,
-          { credentials: 'include' }
-        ),
-        fetch(
-          `http://localhost:5000/api/reports/top-items?hotelId=${user.hotelId}&startDate=${startDate}&endDate=${endDate}&limit=10`,
-          { credentials: 'include' }
-        ),
-        fetch(
-          `http://localhost:5000/api/reports/payments?hotelId=${user.hotelId}&startDate=${startDate}&endDate=${endDate}`,
-          { credentials: 'include' }
-        ),
-      ]);
+    // Mock revenue data
+    const mockRevenueData: RevenueData[] = Array.from({ length: Number(dateRange) }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (Number(dateRange) - i - 1));
+      return {
+        period: date.toISOString().split('T')[0],
+        revenue: Math.floor(Math.random() * 5000) + 2000,
+        orders: Math.floor(Math.random() * 20) + 5,
+        gst: Math.floor(Math.random() * 250) + 100,
+        netRevenue: Math.floor(Math.random() * 4750) + 1900,
+      };
+    });
 
-      const [revenueData, topItemsData, paymentData] = await Promise.all([
-        revenueRes.json(),
-        topItemsRes.json(),
-        paymentRes.json(),
-      ]);
+    const totalRevenue = mockRevenueData.reduce((sum, item) => sum + item.revenue, 0);
+    const totalOrders = mockRevenueData.reduce((sum, item) => sum + item.orders, 0);
+    const totalGST = mockRevenueData.reduce((sum, item) => sum + item.gst, 0);
 
-      if (revenueData.success) {
-        setRevenueData(revenueData.data.reportData);
-        setSummary(revenueData.data.summary);
-      }
+    const mockSummary: ReportSummary = {
+      totalRevenue,
+      totalOrders,
+      totalGST,
+      netRevenue: totalRevenue - totalGST,
+      averageOrderValue: totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0,
+    };
 
-      if (topItemsData.success) {
-        setTopItems(topItemsData.data.topItems);
-      }
+    // Mock top items
+    const mockTopItems: TopItem[] = [
+      { menuItemId: '1', name: 'Butter Chicken', quantity: 145, revenue: 46400, orderCount: 120 },
+      { menuItemId: '2', name: 'Paneer Tikka', quantity: 132, revenue: 36960, orderCount: 110 },
+      { menuItemId: '3', name: 'Biryani', quantity: 118, revenue: 41300, orderCount: 98 },
+      { menuItemId: '4', name: 'Garlic Naan', quantity: 210, revenue: 14700, orderCount: 180 },
+      { menuItemId: '5', name: 'Masala Dosa', quantity: 95, revenue: 17100, orderCount: 85 },
+      { menuItemId: '6', name: 'Chicken Tikka', quantity: 88, revenue: 26400, orderCount: 75 },
+      { menuItemId: '7', name: 'Veg Biryani', quantity: 76, revenue: 19760, orderCount: 68 },
+      { menuItemId: '8', name: 'Dal Makhani', quantity: 102, revenue: 20400, orderCount: 90 },
+      { menuItemId: '9', name: 'Raita', quantity: 180, revenue: 9000, orderCount: 160 },
+      { menuItemId: '10', name: 'Gulab Jamun', quantity: 125, revenue: 12500, orderCount: 110 },
+    ];
 
-      if (paymentData.success) {
-        setPaymentBreakdown(paymentData.data.breakdown);
-      }
-    } catch (error) {
-      console.error('Failed to fetch reports:', error);
-    } finally {
-      setLoading(false);
-    }
+    // Mock payment breakdown
+    const mockPaymentBreakdown: PaymentBreakdown = {
+      CASH: { count: 120, amount: 85000, percentage: 42 },
+      UPI: { count: 180, amount: 105000, percentage: 52 },
+      CARD: { count: 30, amount: 12000, percentage: 6 },
+    };
+
+    setRevenueData(mockRevenueData);
+    setSummary(mockSummary);
+    setTopItems(mockTopItems);
+    setPaymentBreakdown(mockPaymentBreakdown);
+    setLoading(false);
   };
 
   // ============================================================

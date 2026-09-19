@@ -65,7 +65,7 @@ export function WaiterBilling() {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   // ============================================================
-  // FETCH UNPAID ORDERS
+  // FETCH UNPAID ORDERS (Mock)
   // ============================================================
 
   useEffect(() => {
@@ -76,22 +76,52 @@ export function WaiterBilling() {
     if (!user?.hotelId) return;
 
     setLoading(true);
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/billing/unpaid?hotelId=${user.hotelId}`,
-        { credentials: 'include' }
-      );
+    
+    // Mock unpaid orders
+    const mockOrders: Order[] = [
+      {
+        id: 'order-1',
+        tableNumber: 1,
+        totalAmount: 850,
+        status: 'SERVED',
+        paymentStatus: 'UNPAID',
+        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        items: [
+          { name: 'Butter Chicken', quantity: 2, price: 320 },
+          { name: 'Garlic Naan', quantity: 3, price: 70 },
+        ],
+      },
+      {
+        id: 'order-2',
+        tableNumber: 3,
+        totalAmount: 1200,
+        status: 'SERVED',
+        paymentStatus: 'UNPAID',
+        createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+        items: [
+          { name: 'Paneer Tikka', quantity: 2, price: 280 },
+          { name: 'Biryani', quantity: 1, price: 350 },
+          { name: 'Raita', quantity: 2, price: 145 },
+        ],
+      },
+      {
+        id: 'order-3',
+        tableNumber: 5,
+        totalAmount: 650,
+        status: 'SERVED',
+        paymentStatus: 'UNPAID',
+        createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+        items: [
+          { name: 'Masala Dosa', quantity: 2, price: 180 },
+          { name: 'Coffee', quantity: 3, price: 97 },
+        ],
+      },
+    ];
 
-      const data = await response.json();
-
-      if (data.success) {
-        setUnpaidOrders(data.data.orders);
-      }
-    } catch (error) {
-      console.error('Failed to fetch unpaid orders:', error);
-    } finally {
-      setLoading(false);
-    }
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setUnpaidOrders(mockOrders);
+    setLoading(false);
   };
 
   // ============================================================
@@ -130,28 +160,57 @@ export function WaiterBilling() {
   };
 
   // ============================================================
-  // GENERATE INVOICE
+  // GENERATE INVOICE (Mock)
   // ============================================================
 
   const handleGenerateInvoice = async (orderId: string) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/billing/invoice/${orderId}`,
-        { credentials: 'include' }
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSelectedInvoice(data.data);
-        setShowInvoiceModal(true);
-      } else {
-        alert(data.error || 'Failed to generate invoice');
-      }
-    } catch (error) {
-      console.error('Invoice generation error:', error);
-      alert('Failed to generate invoice');
+    const order = unpaidOrders.find(o => o.id === orderId);
+    if (!order) {
+      alert('Order not found');
+      return;
     }
+
+    // Calculate GST (5% = 2.5% CGST + 2.5% SGST)
+    const subtotal = order.totalAmount;
+    const cgst = subtotal * 0.025;
+    const sgst = subtotal * 0.025;
+    const totalGST = cgst + sgst;
+    const grandTotal = subtotal + totalGST;
+
+    // Generate bill number
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+    const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    const billNumber = `BILL-${dateStr}-${random}`;
+
+    const invoice: Invoice = {
+      billNumber,
+      order: {
+        id: order.id,
+        tableNumber: order.tableNumber,
+        items: order.items,
+        subtotal,
+        cgst: Math.round(cgst * 100) / 100,
+        sgst: Math.round(sgst * 100) / 100,
+        totalGST: Math.round(totalGST * 100) / 100,
+        grandTotal: Math.round(grandTotal * 100) / 100,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        paymentMethod: order.paymentMethod,
+        createdAt: order.createdAt,
+      },
+      hotel: {
+        name: 'Taj Palace Restaurant',
+        address: '123 MG Road, Bangalore',
+        phone: '+91 98765 43210',
+        email: 'info@tajpalace.com',
+      },
+      waiter: user?.name || 'N/A',
+      generatedAt: new Date().toISOString(),
+    };
+
+    setSelectedInvoice(invoice);
+    setShowInvoiceModal(true);
   };
 
   // ============================================================
