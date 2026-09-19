@@ -28,13 +28,13 @@ export const authenticateToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    // Read token from HttpOnly cookie
+    const token = req.cookies?.auth_token;
 
     if (!token) {
       res.status(401).json({
         success: false,
-        error: 'Access denied. No token provided.',
+        error: 'Access denied. No session found.',
       });
       return;
     }

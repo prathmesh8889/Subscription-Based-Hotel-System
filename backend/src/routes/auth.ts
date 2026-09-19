@@ -3,7 +3,7 @@
 // ============================================================
 
 import express from 'express';
-import { register, login, getCurrentUser } from '../controllers/authController';
+import { register, login, getCurrentUser, verifySession, logout } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
 import rateLimit from 'express-rate-limit';
 
@@ -20,6 +20,8 @@ const authLimiter = rateLimit({
 
 router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
+router.get('/verify', verifySession);
+router.post('/logout', logout);
 router.get('/me', authenticateToken, getCurrentUser);
 
 export default router;

@@ -45,7 +45,7 @@ export const ipWhitelist = (req: Request, res: Response, next: NextFunction) => 
           timestamp: new Date().toISOString(),
         },
       },
-    }).catch(err => console.error('Failed to log audit:', err));
+    }).catch((err: any) => console.error('Failed to log audit:', err));
 
     return res.status(404).json({
       success: false,
@@ -179,7 +179,7 @@ export const honeypotDetection = (req: Request, res: Response, next: NextFunctio
           timestamp: new Date().toISOString(),
         },
       },
-    }).catch(err => console.error('Failed to log honeypot:', err));
+    }).catch((err: any) => console.error('Failed to log honeypot:', err));
 
     return res.status(404).json({
       success: false,
