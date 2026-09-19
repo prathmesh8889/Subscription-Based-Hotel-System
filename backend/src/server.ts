@@ -13,6 +13,8 @@ dotenv.config();
 
 import authRoutes from './routes/auth';
 import menuRoutes from './routes/menu';
+import billingRoutes from './routes/billing';
+import reportsRoutes from './routes/reports';
 import { testDatabaseConnection } from './config/database';
 import { 
   honeypotDetection, 
@@ -51,6 +53,8 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // Admin routes with enhanced security
 app.use('/api/platform', 

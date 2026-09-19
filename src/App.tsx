@@ -14,8 +14,10 @@ import { LoginPage } from './pages/LoginPage';
 import { SuperAdminLoginPage } from './pages/SuperAdminLoginPage';
 import { AdminHotelsPage } from './pages/admin/AdminHotelsPage';
 import { OwnerDashboard } from './pages/owner/OwnerDashboard';
+import { OwnerReports } from './pages/owner/OwnerReports';
 import { LiveOrders } from './pages/kitchen/LiveOrders';
 import { WaiterDashboard } from './pages/waiter/WaiterDashboard';
+import { WaiterBilling } from './pages/waiter/WaiterBilling';
 import { CustomerQRMenu } from './pages/customer/CustomerQRMenu';
 
 function App() {
@@ -65,7 +67,7 @@ function App() {
             <Route path="staff" element={<OwnerDashboard />} />
             <Route path="orders" element={<OwnerDashboard />} />
             <Route path="billing" element={<OwnerDashboard />} />
-            <Route path="reports" element={<OwnerDashboard />} />
+            <Route path="reports" element={<OwnerReports />} />
           </Route>
 
           {/* Kitchen Staff Routes - Real-time Socket.IO */}
@@ -91,7 +93,7 @@ function App() {
           >
             <Route index element={<WaiterDashboard />} />
             <Route path="orders" element={<WaiterDashboard />} />
-            <Route path="billing" element={<WaiterDashboard />} />
+            <Route path="billing" element={<WaiterBilling />} />
           </Route>
 
           {/* Unauthorized Page */}
