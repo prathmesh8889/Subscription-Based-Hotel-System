@@ -1,11 +1,7 @@
-// ============================================================
-// SUPER ADMIN LOGIN PAGE - Secret Route
-// ============================================================
-
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Eye, EyeOff, AlertCircle, Loader, Info } from 'lucide-react';
+import { Shield, Eye, EyeOff, AlertCircle, Loader } from 'lucide-react';
 
 export function SuperAdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -13,7 +9,7 @@ export function SuperAdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, isDemoMode } = useAuth();
+  const { login, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -26,8 +22,11 @@ export function SuperAdminLoginPage() {
 
     const result = await login(email, password);
 
-    if (result.success) {
-      navigate(from, { replace: true });
+    if (result.success && result.role === 'SUPER_ADMIN') {
+      navigate(from.startsWith('/platform') ? from : '/platform/dashboard', { replace: true });
+    } else if (result.success) {
+      await logout();
+      setError('Super Admin access is required for this area.');
     } else {
       setError(result.error || 'Login failed');
     }
@@ -38,7 +37,6 @@ export function SuperAdminLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl mb-4 shadow-lg shadow-purple-500/20">
             <Shield size={32} className="text-white" />
@@ -47,21 +45,9 @@ export function SuperAdminLoginPage() {
           <p className="text-purple-300 mt-1">Super Admin Access</p>
         </div>
 
-        {/* Login Form */}
         <div className="bg-white rounded-2xl shadow-xl p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-1">Secure Login</h2>
           <p className="text-sm text-gray-500 mb-6">Restricted access area</p>
-
-          {/* Demo Mode Indicator */}
-          {isDemoMode && (
-            <div className="flex items-center gap-2 p-3 mb-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
-              <Info size={16} />
-              <div>
-                <p className="font-medium">Demo Mode</p>
-                <p className="text-xs mt-0.5">Using test data. Backend not connected.</p>
-              </div>
-            </div>
-          )}
 
           {error && (
             <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -123,33 +109,8 @@ export function SuperAdminLoginPage() {
             </button>
           </form>
 
-          {/* Test Credentials (Demo Mode Only) */}
-          {isDemoMode && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-                Test Credentials
-              </p>
-              <button
-                onClick={() => {
-                  setEmail('admin@platform.com');
-                  setPassword('ChangeThisPassword123!');
-                }}
-                className="w-full flex items-center justify-between px-3 py-2 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Super Admin</span>
-                  <p className="text-xs text-gray-500">admin@platform.com</p>
-                </div>
-                <span className="text-xs text-purple-600 font-mono">ChangeThisPassword123!</span>
-              </button>
-            </div>
-          )}
-
-          {/* Security Notice */}
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              🔒 All login attempts are logged and monitored
-            </p>
+            <p className="text-xs text-gray-500 text-center">🔒 Restricted platform administration area</p>
           </div>
         </div>
       </div>
