@@ -41,8 +41,7 @@ function waitForSocket(socket: Socket): Promise<void> {
 export async function runProductionSmokeTests(port: number): Promise<void> {
   const baseUrl = `http://127.0.0.1:${port}`;
   const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
-  const adminEmail = process.env.SUPER_ADMIN_EMAIL!;
-  const adminPassword = process.env.SUPER_ADMIN_PASSWORD!;
+  const suffix = Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
 
   const health = await fetch(baseUrl + '/health');
   const healthBody: any = await health.json();
@@ -62,30 +61,50 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
     assert(bundleResponse.ok, 'Frontend JavaScript bundle failed to load');
     assert(bundle.includes('Platform Admin'), 'Admin login UI missing from deployed bundle');
     assert(bundle.includes('Hotel Management'), 'Admin dashboard UI missing from deployed bundle');
-    assert(bundle.includes('Super Admin access is required'), 'Admin role guard missing from deployed bundle');
+    assert(bundle.includes('My Orders'), 'Customer order tracking UI missing from deployed bundle');
   }
 
-  const adminCookie = await login(baseUrl, adminEmail, adminPassword);
-
-  const verify = await authenticatedGet(baseUrl, '/api/auth/verify', adminCookie);
-  const verifyBody: any = await verify.json();
-  assert(verify.ok && verifyBody?.data?.user?.role === 'SUPER_ADMIN', 'Admin session verification failed');
-
-  const platformHotels = await authenticatedGet(baseUrl, '/api/platform/hotels', adminCookie);
-  assert(platformHotels.ok, 'Admin dashboard data endpoint failed');
-
-  const anonymousPlatform = await fetch(baseUrl + '/api/platform/hotels');
-  assert(anonymousPlatform.status === 401 || anonymousPlatform.status === 403, 'Platform API is not protected');
-
-  const suffix = Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
+  const smokeAdminEmail = `smoke-admin-${suffix}@example.invalid`;
+  const smokeAdminPassword = crypto.randomBytes(24).toString('base64url');
   const ownerEmail = `smoke-owner-${suffix}@example.invalid`;
   const ownerPassword = crypto.randomBytes(20).toString('base64url');
+
+  let smokeAdminId: string | null = null;
   let hotelId: string | null = null;
-  let ownerId: string | null = null;
   let socket: Socket | null = null;
   let customerSocket: Socket | null = null;
 
   try {
+    const smokeAdmin = await prisma.user.create({
+      data: {
+        email: smokeAdminEmail,
+        password: await bcrypt.hash(smokeAdminPassword, 10),
+        name: 'Smoke Test Admin',
+        role: 'SUPER_ADMIN',
+        hotelId: null,
+        isActive: true,
+      },
+    });
+    smokeAdminId = smokeAdmin.id;
+
+    const adminCookie = await login(baseUrl, smokeAdminEmail, smokeAdminPassword);
+
+    const verify = await authenticatedGet(baseUrl, '/api/auth/verify', adminCookie);
+    const verifyBody: any = await verify.json();
+    assert(
+      verify.ok && verifyBody?.data?.user?.role === 'SUPER_ADMIN',
+      'Admin session verification failed'
+    );
+
+    const platformHotels = await authenticatedGet(baseUrl, '/api/platform/hotels', adminCookie);
+    assert(platformHotels.ok, 'Admin dashboard data endpoint failed');
+
+    const anonymousPlatform = await fetch(baseUrl + '/api/platform/hotels');
+    assert(
+      anonymousPlatform.status === 401 || anonymousPlatform.status === 403,
+      'Platform API is not protected'
+    );
+
     const hotel = await prisma.hotel.create({
       data: {
         name: 'Smoke Test Hotel ' + suffix,
@@ -100,7 +119,7 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
     });
     hotelId = hotel.id;
 
-    const owner = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: ownerEmail,
         password: await bcrypt.hash(ownerPassword, 10),
@@ -110,7 +129,6 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
         isActive: true,
       },
     });
-    ownerId = owner.id;
 
     const table = await prisma.table.create({
       data: {
@@ -144,7 +162,7 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
     });
     await waitForSocket(socket);
 
-    const liveEvent = new Promise<any>((resolve, reject) => {
+    const staffLiveEvent = new Promise<any>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('new_order Socket.IO event timed out')), 8000);
       socket!.once('new_order', payload => {
         clearTimeout(timer);
@@ -165,8 +183,11 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
     const orderBody: any = await orderResponse.json();
     assert(orderResponse.ok && orderBody?.success, 'Public QR order request failed');
 
-    const event = await liveEvent;
-    assert(event?.orderId === orderBody.data.orderId, 'Socket.IO event did not match created order');
+    const staffEvent = await staffLiveEvent;
+    assert(
+      staffEvent?.orderId === orderBody.data.orderId,
+      'Staff Socket.IO event did not match created order'
+    );
 
     const publicOrder = await fetch(
       baseUrl + '/api/public/orders/' + encodeURIComponent(orderBody.data.orderId) +
@@ -175,7 +196,15 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
       '&token=' + encodeURIComponent(table.qrToken)
     );
     const publicOrderBody: any = await publicOrder.json();
-    assert(publicOrder.ok && publicOrderBody?.data?.id === orderBody.data.orderId, 'Customer order details endpoint failed');
+    assert(
+      publicOrder.ok && publicOrderBody?.data?.id === orderBody.data.orderId,
+      'Customer order details endpoint failed'
+    );
+    assert(
+      Array.isArray(publicOrderBody?.data?.items) &&
+      publicOrderBody.data.items[0]?.name === 'Smoke Test Item',
+      'Customer order item details are incomplete'
+    );
 
     customerSocket = createSocket(baseUrl + '/customer', {
       transports: ['websocket', 'polling'],
@@ -188,6 +217,21 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
     });
     await waitForSocket(customerSocket);
 
+    const snapshot = new Promise<any>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('Customer order snapshot timed out')), 8000);
+      customerSocket!.once('order_snapshot', payload => {
+        clearTimeout(timer);
+        resolve(payload);
+      });
+    });
+
+    customerSocket.emit('watch_order', { orderId: orderBody.data.orderId });
+    const snapshotPayload = await snapshot;
+    assert(
+      snapshotPayload?.orderId === orderBody.data.orderId,
+      'Customer could not subscribe to own order'
+    );
+
     const customerUpdate = new Promise<any>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('Customer live order update timed out')), 8000);
       customerSocket!.once('order_updated', payload => {
@@ -195,8 +239,6 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
         resolve(payload);
       });
     });
-
-    customerSocket.emit('watch_order', { orderId: orderBody.data.orderId });
 
     const statusResponse = await fetch(baseUrl + '/api/orders/' + orderBody.data.orderId + '/status', {
       method: 'PATCH',
@@ -210,7 +252,8 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
 
     const customerEvent = await customerUpdate;
     assert(
-      customerEvent?.orderId === orderBody.data.orderId && customerEvent?.status === 'PREPARING',
+      customerEvent?.orderId === orderBody.data.orderId &&
+      customerEvent?.status === 'PREPARING',
       'Customer did not receive live PREPARING update'
     );
 
@@ -220,6 +263,7 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
   } finally {
     if (socket) socket.disconnect();
     if (customerSocket) customerSocket.disconnect();
+
     if (hotelId) {
       await prisma.auditLog.deleteMany({ where: { hotelId } });
       await prisma.order.deleteMany({ where: { hotelId } });
@@ -227,8 +271,11 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
       await prisma.table.deleteMany({ where: { hotelId } });
       await prisma.user.deleteMany({ where: { hotelId } });
       await prisma.hotel.deleteMany({ where: { id: hotelId } });
-    } else if (ownerId) {
-      await prisma.user.deleteMany({ where: { id: ownerId } });
+    }
+
+    if (smokeAdminId) {
+      await prisma.auditLog.deleteMany({ where: { userId: smokeAdminId } });
+      await prisma.user.deleteMany({ where: { id: smokeAdminId } });
     }
   }
 }
