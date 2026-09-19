@@ -29,6 +29,14 @@ export const authenticateToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not configured. Please set DATABASE_URL environment variable.',
+      });
+    }
+
     // Read token from HttpOnly cookie
     const token = req.cookies?.auth_token;
 

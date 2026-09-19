@@ -92,14 +92,19 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 // Start server
 async function startServer() {
+  // Try to connect to database, but don't crash if it fails
   try {
     await testDatabaseConnection();
+  } catch (error) {
+    console.warn('⚠️  Database not connected - running in demo mode');
+    console.warn('⚠️  Set DATABASE_URL environment variable to enable database');
+  }
 
-    // Initialize Socket.io
-    initializeSocket(httpServer);
+  // Initialize Socket.io
+  initializeSocket(httpServer);
 
-    httpServer.listen(PORT, () => {
-      console.log(`
+  httpServer.listen(PORT, () => {
+    console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
 ║   🚀 RestroFlow Backend Server                           ║
@@ -110,12 +115,8 @@ async function startServer() {
 ║   🔌 Socket.io: ws://localhost:${PORT}                    ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
-      `);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
+    `);
+  });
 }
 
 startServer();

@@ -19,12 +19,18 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export async function testDatabaseConnection(): Promise<void> {
+  // Check if DATABASE_URL is provided
+  if (!process.env.DATABASE_URL) {
+    console.warn('⚠️  DATABASE_URL not set - database features disabled');
+    throw new Error('DATABASE_URL not configured');
+  }
+
   try {
     await prisma.$connect();
     console.log('✅ Database connected successfully');
   } catch (error) {
     console.error('❌ Database connection failed:', error);
-    process.exit(1);
+    throw error;
   }
 }
 

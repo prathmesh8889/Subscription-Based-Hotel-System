@@ -48,6 +48,11 @@ export const authenticateSocket = async (
   next: (err?: Error) => void
 ) => {
   try {
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      return next(new Error('Database not configured'));
+    }
+
     // Get token from handshake auth
     const token = socket.handshake.auth.token;
 
