@@ -16,6 +16,7 @@ export interface JwtPayload {
 export interface AuthRequest extends Request {
   user?: JwtPayload;
   hotelId?: string;
+  cookies?: any;
 }
 
 // ============================================================
@@ -23,7 +24,7 @@ export interface AuthRequest extends Request {
 // ============================================================
 
 export const authenticateToken = async (
-  req: AuthRequest,
+  req: any,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -109,7 +110,7 @@ export const authenticateToken = async (
 // ============================================================
 
 export const authorizeRole = (allowedRoles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+  return (req: any, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({
         success: false,
@@ -140,7 +141,7 @@ export const authorizeRole = (allowedRoles: string[]) => {
 // ============================================================
 
 export const verifyHotelAccess = async (
-  req: AuthRequest,
+  req: any,
   res: Response,
   next: NextFunction
 ): Promise<void> => {

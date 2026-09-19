@@ -8,7 +8,6 @@ import { Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/database';
 import bcrypt from 'bcryptjs';
-import { AuthRequest } from '../middleware/auth';
 import { Role } from '@prisma/client';
 
 // ============================================================
@@ -26,7 +25,7 @@ const createStaffSchema = z.object({
 // CREATE STAFF (Owner Only)
 // ============================================================
 
-export const createStaff = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createStaff = async (req: any, res: Response): Promise<void> => {
   try {
     if (req.user?.role !== 'OWNER') {
       res.status(403).json({
@@ -140,7 +139,7 @@ export const createStaff = async (req: AuthRequest, res: Response): Promise<void
 // GET HOTEL STAFF (Owner Only)
 // ============================================================
 
-export const getHotelStaff = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getHotelStaff = async (req: any, res: Response): Promise<void> => {
   try {
     if (req.user?.role !== 'OWNER') {
       res.status(403).json({
@@ -181,7 +180,7 @@ export const getHotelStaff = async (req: AuthRequest, res: Response): Promise<vo
 // TOGGLE STAFF STATUS (Owner Only)
 // ============================================================
 
-export const toggleStaffStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+export const toggleStaffStatus = async (req: any, res: Response): Promise<void> => {
   try {
     if (req.user?.role !== 'OWNER') {
       res.status(403).json({

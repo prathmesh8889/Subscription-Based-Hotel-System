@@ -8,7 +8,6 @@ import { Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/database';
 import bcrypt from 'bcryptjs';
-import { AuthRequest } from '../middleware/auth';
 import { SubscriptionPlan } from '@prisma/client';
 
 // ============================================================
@@ -32,7 +31,7 @@ const createHotelSchema = z.object({
 // ============================================================
 
 export const createHotelAndOwner = async (
-  req: AuthRequest,
+  req: any,
   res: Response
 ): Promise<void> => {
   try {
@@ -173,7 +172,7 @@ export const createHotelAndOwner = async (
 // GET ALL HOTELS (Super Admin Only)
 // ============================================================
 
-export const getAllHotels = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAllHotels = async (req: any, res: Response): Promise<void> => {
   try {
     if (req.user?.role !== 'SUPER_ADMIN') {
       res.status(403).json({
