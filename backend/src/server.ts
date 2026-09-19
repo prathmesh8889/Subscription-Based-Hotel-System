@@ -1,5 +1,5 @@
 // ============================================================
-// EXPRESS SERVER
+// EXPRESS SERVER - Production Ready
 // ============================================================
 
 import express from 'express';
@@ -9,19 +9,27 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 
+// Load environment variables
 dotenv.config();
 
+// Import routes
 import authRoutes from './routes/auth';
 import menuRoutes from './routes/menu';
 import billingRoutes from './routes/billing';
 import reportsRoutes from './routes/reports';
+
+// Import database config
 import { testDatabaseConnection } from './config/database';
+
+// Import middleware
 import { 
   honeypotDetection, 
   ipWhitelist, 
   adminAccessLogger, 
   adminSessionSecurity 
 } from './middleware/adminSecurity';
+
+// Import Socket.io
 import { initializeSocket } from './socket';
 
 const app = express();
