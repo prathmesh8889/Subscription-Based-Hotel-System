@@ -151,7 +151,7 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
       },
     });
 
-    const ownerCookie = await login(baseUrl, ownerEmail, ownerPassword);
+    let ownerCookie = await login(baseUrl, ownerEmail, ownerPassword);
 
     const ownerSettings = await authenticatedGet(baseUrl, '/api/owner/settings', ownerCookie);
     const ownerSettingsBody: any = await ownerSettings.json();
@@ -174,6 +174,21 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
     });
     assert(updateSettings.ok, 'Owner profile/settings update failed');
 
+    const changedOwnerPassword = crypto.randomBytes(20).toString('base64url');
+    const changePasswordResponse = await fetch(baseUrl + '/api/owner/change-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: ownerCookie,
+      },
+      body: JSON.stringify({
+        currentPassword: ownerPassword,
+        newPassword: changedOwnerPassword,
+      }),
+    });
+    assert(changePasswordResponse.ok, 'Owner change-password action failed');
+    ownerCookie = await login(baseUrl, ownerEmail, changedOwnerPassword);
+
     const addTableResponse = await fetch(baseUrl + '/api/tables', {
       method: 'POST',
       headers: {
@@ -182,7 +197,24 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
       },
       body: JSON.stringify({ tableNumber: 2, capacity: 4 }),
     });
-    assert(addTableResponse.ok, 'Owner add-table action failed');
+    const addTableBody: any = await addTableResponse.json();
+    assert(addTableResponse.ok && addTableBody?.data?.id, 'Owner add-table action failed');
+
+    const rotateQrResponse = await fetch(baseUrl + '/api/tables/' + addTableBody.data.id + '/rotate-qr', {
+      method: 'POST',
+      headers: { Cookie: ownerCookie },
+    });
+    assert(rotateQrResponse.ok, 'Owner rotate-QR action failed');
+
+    const tableStatusResponse = await fetch(baseUrl + '/api/tables/' + addTableBody.data.id + '/status', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: ownerCookie,
+      },
+      body: JSON.stringify({ status: 'RESERVED' }),
+    });
+    assert(tableStatusResponse.ok, 'Owner table-status action failed');
 
     const addMenuResponse = await fetch(baseUrl + '/api/menu', {
       method: 'POST',
@@ -199,7 +231,27 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
         prepTimeMinutes: 2,
       }),
     });
-    assert(addMenuResponse.ok, 'Owner add-menu action failed');
+    const addMenuBody: any = await addMenuResponse.json();
+    assert(addMenuResponse.ok && addMenuBody?.data?.id, 'Owner add-menu action failed');
+
+    const updateMenuResponse = await fetch(baseUrl + '/api/menu/' + addMenuBody.data.id, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: ownerCookie,
+      },
+      body: JSON.stringify({
+        price: 65,
+        isAvailable: false,
+      }),
+    });
+    assert(updateMenuResponse.ok, 'Owner edit-menu action failed');
+
+    const deleteMenuResponse = await fetch(baseUrl + '/api/menu/' + addMenuBody.data.id, {
+      method: 'DELETE',
+      headers: { Cookie: ownerCookie },
+    });
+    assert(deleteMenuResponse.ok, 'Owner delete-menu action failed');
 
     const staffEmail = `smoke-waiter-${suffix}@example.invalid`;
     const addStaffResponse = await fetch(baseUrl + '/api/staff', {
@@ -336,9 +388,39 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
       'Customer did not receive live PREPARING update'
     );
 
+    for (const nextStatus of ['READY', 'SERVED']) {
+      const nextStatusResponse = await fetch(baseUrl + '/api/orders/' + orderBody.data.orderId + '/status', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: ownerCookie,
+        },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      assert(nextStatusResponse.ok, 'Owner order status action failed for ' + nextStatus);
+    }
+
+    const paymentResponse = await fetch(baseUrl + '/api/billing/pay/' + orderBody.data.orderId, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: ownerCookie,
+      },
+      body: JSON.stringify({ paymentMethod: 'CARD' }),
+    });
+    const paymentBody: any = await paymentResponse.json();
+    assert(
+      paymentResponse.ok &&
+      paymentBody?.data?.paymentStatus === 'PAID' &&
+      paymentBody?.data?.paymentMethod === 'CARD',
+      'Owner billing CARD payment action failed'
+    );
+
     const savedOrder = await prisma.order.findUnique({ where: { id: orderBody.data.orderId } });
     assert(savedOrder, 'Order was not persisted in PostgreSQL');
     assert(Number(savedOrder.totalAmount) === 99, 'Server-side total is incorrect');
+    assert(savedOrder.status === 'SERVED', 'Final order status was not persisted');
+    assert(savedOrder.paymentStatus === 'PAID' && savedOrder.paymentMethod === 'CARD', 'Payment was not persisted');
   } finally {
     if (socket) socket.disconnect();
     if (customerSocket) customerSocket.disconnect();

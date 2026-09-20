@@ -22,6 +22,9 @@ export function OwnerBilling() {
   const [showBillPreview, setShowBillPreview] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'unpaid' | 'paid'>('unpaid');
   const [searchTerm, setSearchTerm] = useState('');
+  const [paymentError, setPaymentError] = useState('');
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const [processingId, setProcessingId] = useState('');
 
   // Filter orders
   const filteredOrders = orders.filter(order => {
@@ -45,10 +48,20 @@ export function OwnerBilling() {
     return new Date(o.updated_at).toDateString() === today;
   }).reduce((sum, o) => sum + o.total_amount, 0);
 
-  const handleProcessPayment = (orderId: string, method: PaymentMethod) => {
-    updatePaymentStatus(orderId, 'PAID', method);
-    setSelectedOrder(null);
-    setShowBillPreview(false);
+  const handleProcessPayment = async (orderId: string, method: PaymentMethod) => {
+    setProcessingId(orderId);
+    setPaymentError('');
+    setPaymentMessage('');
+    try {
+      await updatePaymentStatus(orderId, 'PAID', method);
+      setPaymentMessage('Payment collected successfully via ' + method + '.');
+      setSelectedOrder(null);
+      setShowBillPreview(false);
+    } catch (e: any) {
+      setPaymentError(e.message || 'Failed to process payment.');
+    } finally {
+      setProcessingId('');
+    }
   };
 
   const handlePrintBill = () => {
@@ -68,6 +81,9 @@ export function OwnerBilling() {
           <p className="text-sm text-gray-500">Generate bills and process payments</p>
         </div>
       </div>
+
+      {paymentError && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">{paymentError}</div>}
+      {paymentMessage && <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">{paymentMessage}</div>}
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -308,20 +324,30 @@ export function OwnerBilling() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select Payment Method
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <button
+                    disabled={processingId === selectedOrder.id}
                     onClick={() => handleProcessPayment(selectedOrder.id, 'CASH')}
-                    className="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
+                    className="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors disabled:opacity-50"
                   >
                     <Banknote size={24} className="text-green-600" />
                     <span className="text-sm font-medium text-gray-700">Cash</span>
                   </button>
                   <button
+                    disabled={processingId === selectedOrder.id}
                     onClick={() => handleProcessPayment(selectedOrder.id, 'UPI')}
-                    className="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
+                    className="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors disabled:opacity-50"
                   >
                     <CreditCard size={24} className="text-purple-600" />
                     <span className="text-sm font-medium text-gray-700">UPI</span>
+                  </button>
+                  <button
+                    disabled={processingId === selectedOrder.id}
+                    onClick={() => handleProcessPayment(selectedOrder.id, 'CARD')}
+                    className="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                  >
+                    <CreditCard size={24} className="text-blue-600" />
+                    <span className="text-sm font-medium text-gray-700">Card</span>
                   </button>
                 </div>
               </div>
@@ -369,10 +395,10 @@ export function OwnerBilling() {
             <div className="p-6" id="bill-content">
               {/* Bill Header */}
               <div className="text-center mb-6 pb-6 border-b-2 border-gray-800">
-                <h2 className="text-2xl font-bold text-gray-800">Taj Palace Restaurant</h2>
-                <p className="text-sm text-gray-600 mt-1">123 MG Road, Bangalore</p>
-                <p className="text-sm text-gray-600">Phone: +91 98765 43210</p>
-                <p className="text-sm text-gray-600">GSTIN: 29AABCT1234R1Z5</p>
+                <h2 className="text-2xl font-bold text-gray-800">{user?.hotel?.name || 'Restaurant'}</h2>
+                {user?.hotel?.address && <p className="text-sm text-gray-600 mt-1">{user.hotel.address}</p>}
+                {user?.hotel?.phone && <p className="text-sm text-gray-600">Phone: {user.hotel.phone}</p>}
+                {user?.hotel?.email && <p className="text-sm text-gray-600">{user.hotel.email}</p>}
               </div>
 
               {/* Bill Info */}
