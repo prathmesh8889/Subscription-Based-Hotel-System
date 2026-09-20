@@ -17,6 +17,7 @@ import staffRoutes from './routes/staff';
 import tableRoutes from './routes/tables';
 import orderRoutes from './routes/orders';
 import publicRoutes from './routes/public';
+import ownerRoutes from './routes/owner';
 import { prisma, testDatabaseConnection } from './config/database';
 import { initializeSocket } from './socket';
 import { runProductionSmokeTests } from './smoke';
@@ -81,6 +82,7 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/platform', platformRoutes);
+app.use('/api/owner', ownerRoutes);
 
 app.use('/api', (_req, res) => {
   res.status(404).json({ success: false, error: 'API route not found.' });

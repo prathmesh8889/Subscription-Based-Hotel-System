@@ -152,6 +152,85 @@ export async function runProductionSmokeTests(port: number): Promise<void> {
     });
 
     const ownerCookie = await login(baseUrl, ownerEmail, ownerPassword);
+
+    const ownerSettings = await authenticatedGet(baseUrl, '/api/owner/settings', ownerCookie);
+    const ownerSettingsBody: any = await ownerSettings.json();
+    assert(ownerSettings.ok && ownerSettingsBody?.data?.hotel?.id === hotelId, 'Owner settings failed');
+
+    const updateSettings = await fetch(baseUrl + '/api/owner/settings', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: ownerCookie,
+      },
+      body: JSON.stringify({
+        name: 'Smoke Test Owner',
+        email: ownerEmail,
+        hotelName: 'Smoke Test Hotel ' + suffix,
+        address: 'Smoke Test Address',
+        phone: '9999999999',
+        businessEmail: '',
+      }),
+    });
+    assert(updateSettings.ok, 'Owner profile/settings update failed');
+
+    const addTableResponse = await fetch(baseUrl + '/api/tables', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: ownerCookie,
+      },
+      body: JSON.stringify({ tableNumber: 2, capacity: 4 }),
+    });
+    assert(addTableResponse.ok, 'Owner add-table action failed');
+
+    const addMenuResponse = await fetch(baseUrl + '/api/menu', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: ownerCookie,
+      },
+      body: JSON.stringify({
+        name: 'Smoke Extra Item',
+        description: 'Owner CRUD verification',
+        price: 55,
+        category: 'Test',
+        isAvailable: true,
+        prepTimeMinutes: 2,
+      }),
+    });
+    assert(addMenuResponse.ok, 'Owner add-menu action failed');
+
+    const staffEmail = `smoke-waiter-${suffix}@example.invalid`;
+    const addStaffResponse = await fetch(baseUrl + '/api/staff', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: ownerCookie,
+      },
+      body: JSON.stringify({
+        name: 'Smoke Waiter',
+        email: staffEmail,
+        password: crypto.randomBytes(16).toString('base64url'),
+        role: 'WAITER',
+      }),
+    });
+    const addStaffBody: any = await addStaffResponse.json();
+    assert(addStaffResponse.ok && addStaffBody?.data?.id, 'Owner add-staff action failed');
+
+    const toggleStaffResponse = await fetch(baseUrl + '/api/staff/' + addStaffBody.data.id + '/toggle', {
+      method: 'PATCH',
+      headers: { Cookie: ownerCookie },
+    });
+    assert(toggleStaffResponse.ok, 'Owner staff toggle action failed');
+
+    const reportResponse = await authenticatedGet(
+      baseUrl,
+      '/api/reports/revenue?hotelId=' + encodeURIComponent(hotelId),
+      ownerCookie
+    );
+    assert(reportResponse.ok, 'Owner reports endpoint failed');
+
     const ownerPlatform = await authenticatedGet(baseUrl, '/api/platform/hotels', ownerCookie);
     assert(ownerPlatform.status === 403, 'Non-admin user was able to access platform API');
 

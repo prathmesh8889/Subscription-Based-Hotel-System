@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import {
   LayoutDashboard, UtensilsCrossed, Table2, QrCode, Users,
   Receipt, ChefHat, ClipboardList, Building2, CreditCard,
@@ -14,7 +15,10 @@ import {
 export function DashboardLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { getHotelOrders } = useData();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const hotelOrders = user?.hotelId ? getHotelOrders(user.hotelId) : [];
+  const pendingAlerts = hotelOrders.filter(o => ['PENDING','PREPARING','READY'].includes(o.status)).length;
 
   const handleLogout = async () => {
     await logout();
@@ -40,6 +44,7 @@ export function DashboardLayout() {
           { to: '/owner/orders', icon: ClipboardList, label: 'Orders' },
           { to: '/owner/billing', icon: CreditCard, label: 'Billing' },
           { to: '/owner/reports', icon: Receipt, label: 'Reports' },
+          { to: '/owner/settings', icon: Settings, label: 'Settings' },
         ];
       case 'KITCHEN':
         return [
@@ -156,13 +161,31 @@ export function DashboardLayout() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-lg relative">
+            <button
+              onClick={() => {
+                if (user?.role === 'OWNER') navigate('/owner/orders');
+                else if (user?.role === 'KITCHEN') navigate('/kitchen');
+                else if (user?.role === 'WAITER') navigate('/waiter/orders');
+              }}
+              className="p-2 hover:bg-gray-100 rounded-lg relative"
+              title="Order notifications"
+            >
               <Bell size={18} className="text-gray-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              {pendingAlerts > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 text-[10px] bg-red-500 text-white rounded-full grid place-items-center">
+                  {Math.min(pendingAlerts, 99)}
+                </span>
+              )}
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg">
-              <Settings size={18} className="text-gray-600" />
-            </button>
+            {user?.role === 'OWNER' && (
+              <button
+                onClick={() => navigate('/owner/settings')}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+                title="Settings"
+              >
+                <Settings size={18} className="text-gray-600" />
+              </button>
+            )}
           </div>
         </header>
 
