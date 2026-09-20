@@ -22,6 +22,9 @@ export function OwnerMenuPage() {
     name: '', description: '', price: '', category: 'Main Course',
     is_available: true, prep_time_minutes: '15', image_url: '',
   });
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const filteredItems = menuItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -47,25 +50,54 @@ export function OwnerMenuPage() {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!hotel) return;
+
+    const price = Number(formData.price);
+    const prepTime = Number(formData.prep_time_minutes);
+
+    if (!formData.name.trim()) {
+      setError('Item name is required.');
+      return;
+    }
+    if (!Number.isFinite(price) || price <= 0) {
+      setError('Enter a valid price greater than 0.');
+      return;
+    }
+    if (!Number.isInteger(prepTime) || prepTime < 0) {
+      setError('Enter a valid preparation time.');
+      return;
+    }
+
     const data = {
       hotel_id: hotel.id,
-      name: formData.name,
-      description: formData.description,
-      price: parseFloat(formData.price),
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      price,
       category: formData.category,
       is_available: formData.is_available,
-      prep_time_minutes: parseInt(formData.prep_time_minutes),
+      prep_time_minutes: prepTime,
       image_url: formData.image_url,
     };
 
-    if (editingItem) {
-      updateMenuItem(editingItem.id, data);
-    } else {
-      addMenuItem(data);
+    setSaving(true);
+    setError('');
+    setMessage('');
+
+    try {
+      if (editingItem) {
+        await updateMenuItem(editingItem.id, data);
+        setMessage('Menu item updated successfully.');
+      } else {
+        await addMenuItem(data);
+        setMessage('Menu item added successfully.');
+      }
+      setShowForm(false);
+    } catch (e: any) {
+      setError(e.message || 'Failed to save menu item.');
+    } finally {
+      setSaving(false);
     }
-    setShowForm(false);
   };
 
   return (
@@ -84,6 +116,9 @@ export function OwnerMenuPage() {
           Add Item
         </button>
       </div>
+
+      {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">{error}</div>}
+      {message && <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">{message}</div>}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -150,7 +185,16 @@ export function OwnerMenuPage() {
                 </span>
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => updateMenuItem(item.id, { is_available: !item.is_available })}
+                    onClick={async () => {
+                      setError('');
+                      setMessage('');
+                      try {
+                        await updateMenuItem(item.id, { is_available: !item.is_available });
+                        setMessage(item.is_available ? 'Item marked unavailable.' : 'Item marked available.');
+                      } catch (e: any) {
+                        setError(e.message || 'Failed to update item availability.');
+                      }
+                    }}
                     className={`p-1.5 rounded-lg transition-colors ${
                       item.is_available ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-50'
                     }`}
@@ -165,8 +209,16 @@ export function OwnerMenuPage() {
                     <Edit2 size={16} />
                   </button>
                   <button
-                    onClick={() => {
-                      if (confirm('Delete this item?')) deleteMenuItem(item.id);
+                    onClick={async () => {
+                      if (!confirm('Delete this item?')) return;
+                      setError('');
+                      setMessage('');
+                      try {
+                        await deleteMenuItem(item.id);
+                        setMessage('Menu item deleted.');
+                      } catch (e: any) {
+                        setError(e.message || 'Failed to delete menu item.');
+                      }
                     }}
                     className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
                   >
@@ -272,10 +324,11 @@ export function OwnerMenuPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleSave}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 transition-colors"
+                  disabled={saving}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50"
                 >
                   <Save size={16} />
-                  {editingItem ? 'Update' : 'Add Item'}
+                  {saving ? 'Saving...' : editingItem ? 'Update' : 'Add Item'}
                 </button>
                 <button
                   onClick={() => setShowForm(false)}
