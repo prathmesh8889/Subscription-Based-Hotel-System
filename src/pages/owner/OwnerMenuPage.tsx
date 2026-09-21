@@ -101,16 +101,16 @@ export function OwnerMenuPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 min-w-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Menu Management</h1>
           <p className="text-sm text-gray-500">{menuItems.length} items • {menuItems.filter(m => m.is_available).length} available</p>
         </div>
         <button
           onClick={openAddForm}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors shadow-sm"
+          className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors shadow-sm"
         >
           <Plus size={18} />
           Add Item
@@ -150,7 +150,7 @@ export function OwnerMenuPage() {
       </div>
 
       {/* Menu Items Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
         {filteredItems.map((item) => (
           <div
             key={item.id}
@@ -240,7 +240,7 @@ export function OwnerMenuPage() {
       {/* Add/Edit Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-md p-4 sm:p-6 shadow-xl max-h-[92dvh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{editingItem ? 'Edit Item' : 'Add New Item'}</h3>
               <button onClick={() => setShowForm(false)} className="p-1 hover:bg-gray-100 rounded">
@@ -271,7 +271,7 @@ export function OwnerMenuPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
                   <input
@@ -321,7 +321,7 @@ export function OwnerMenuPage() {
                 </button>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                 <button
                   onClick={handleSave}
                   disabled={saving}
@@ -332,7 +332,7 @@ export function OwnerMenuPage() {
                 </button>
                 <button
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancel
                 </button>

@@ -32,30 +32,30 @@ export function OwnerDashboard(){
 
   const recent=[...orders].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,5);
 
-  return <div className="space-y-6">
-    <div className="flex flex-wrap items-center justify-between gap-3">
+  return <div className="space-y-4 sm:space-y-6 min-w-0">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div><h1 className="text-2xl font-bold text-gray-800">Dashboard</h1><p className="text-sm text-gray-500">Welcome back, {user?.name}</p></div>
-      <button onClick={()=>refresh()} className="px-3 py-2 border bg-white rounded-lg flex items-center gap-2 text-sm"><RefreshCw size={16}/>Refresh</button>
+      <button onClick={()=>refresh()} className="w-full sm:w-auto px-3 py-2 border bg-white rounded-lg flex items-center justify-center gap-2 text-sm"><RefreshCw size={16}/>Refresh</button>
     </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map(({label,value,icon:Icon,cls})=><div key={label} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm"><div className={"w-10 h-10 rounded-lg flex items-center justify-center "+cls}><Icon size={20}/></div><p className="text-2xl font-bold text-gray-800 mt-4">{value}</p><p className="text-xs text-gray-500 mt-1">{label}</p></div>)}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {cards.map(({label,value,icon:Icon,cls})=><div key={label} className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm"><div className={"w-10 h-10 rounded-lg flex items-center justify-center "+cls}><Icon size={20}/></div><p className="text-xl sm:text-2xl font-bold text-gray-800 mt-3 sm:mt-4 break-words">{value}</p><p className="text-xs text-gray-500 mt-1">{label}</p></div>)}
     </div>
 
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
       <h2 className="text-lg font-semibold text-gray-800 mb-2">Quick Setup</h2>
       <p className="text-gray-600 mb-4">Set up your restaurant and manage daily operations.</p>
-      <div className="flex flex-wrap gap-3">
-        <button onClick={()=>nav('/owner/menu')} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2"><UtensilsCrossed size={17}/>{menu.length?'Manage Menu':'Setup Menu'}</button>
-        <button onClick={()=>nav('/owner/tables')} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"><Plus size={17}/>Add Tables</button>
-        <button onClick={()=>nav('/owner/orders')} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"><ClipboardList size={17}/>View Orders</button>
-        <button onClick={()=>nav('/owner/billing')} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"><Receipt size={17}/>Billing</button>
+      <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 sm:gap-3">
+        <button onClick={()=>nav('/owner/menu')} className="w-full sm:w-auto justify-center px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2"><UtensilsCrossed size={17}/>{menu.length?'Manage Menu':'Setup Menu'}</button>
+        <button onClick={()=>nav('/owner/tables')} className="w-full sm:w-auto justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"><Plus size={17}/>Add Tables</button>
+        <button onClick={()=>nav('/owner/orders')} className="w-full sm:w-auto justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"><ClipboardList size={17}/>View Orders</button>
+        <button onClick={()=>nav('/owner/billing')} className="w-full sm:w-auto justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"><Receipt size={17}/>Billing</button>
       </div>
     </div>
 
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <div className="p-5 border-b flex items-center justify-between"><div><h2 className="font-semibold">Recent Orders</h2><p className="text-xs text-gray-500">Latest activity from your restaurant</p></div><button onClick={()=>nav('/owner/orders')} className="text-sm text-amber-600 font-medium">View all</button></div>
-      {recent.length?<div className="divide-y">{recent.map(o=><button key={o.id} onClick={()=>nav('/owner/orders')} className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50"><div><p className="font-medium">Order #{o.id.slice(-6).toUpperCase()} • Table {o.table_number}</p><p className="text-xs text-gray-500">{new Date(o.created_at).toLocaleString()} • {o.items.length} item(s)</p></div><div className="text-right"><p className="font-semibold">₹{o.total_amount.toLocaleString()}</p><p className="text-xs text-gray-500">{o.status} • {o.payment_status}</p></div></button>)}</div>:<div className="p-8 text-center text-gray-500">No orders yet. Customer QR orders will appear here.</div>}
+      <div className="p-4 sm:p-5 border-b flex items-start sm:items-center justify-between gap-3"><div><h2 className="font-semibold">Recent Orders</h2><p className="text-xs text-gray-500">Latest activity from your restaurant</p></div><button onClick={()=>nav('/owner/orders')} className="text-sm text-amber-600 font-medium">View all</button></div>
+      {recent.length?<div className="divide-y">{recent.map(o=><button key={o.id} onClick={()=>nav('/owner/orders')} className="w-full p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left hover:bg-gray-50"><div><p className="font-medium">Order #{o.id.slice(-6).toUpperCase()} • Table {o.table_number}</p><p className="text-xs text-gray-500">{new Date(o.created_at).toLocaleString()} • {o.items.length} item(s)</p></div><div className="text-left sm:text-right"><p className="font-semibold">₹{o.total_amount.toLocaleString()}</p><p className="text-xs text-gray-500">{o.status} • {o.payment_status}</p></div></button>)}</div>:<div className="p-8 text-center text-gray-500">No orders yet. Customer QR orders will appear here.</div>}
     </div>
   </div>
 }

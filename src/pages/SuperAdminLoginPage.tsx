@@ -37,15 +37,15 @@ export function SuperAdminLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl mb-4 shadow-lg shadow-purple-500/20">
+        <div className="text-center mb-5 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl mb-4 shadow-lg shadow-purple-500/20">
             <Shield size={32} className="text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">Platform Admin</h1>
           <p className="text-purple-300 mt-1">Super Admin Access</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-6">
+        <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-1">Secure Login</h2>
           <p className="text-sm text-gray-500 mb-6">Restricted access area</p>
 
