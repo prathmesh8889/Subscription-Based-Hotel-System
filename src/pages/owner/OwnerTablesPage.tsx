@@ -64,28 +64,28 @@ export function OwnerTablesPage(){
     }
   };
 
-  return <div className="space-y-5">
+  return <div className="space-y-4 sm:space-y-5 min-w-0">
     <div><h1 className="text-2xl font-bold">Tables & QR Codes</h1><p className="text-sm text-gray-500">Add tables and generate secure customer ordering QR codes.</p></div>
 
     {error&&<div className="p-3 bg-red-50 text-red-700 rounded-lg">{error}</div>}
     {message&&<div className="p-3 bg-green-50 text-green-700 rounded-lg flex items-center gap-2"><CheckCircle2 size={17}/>{message}</div>}
 
-    <div className="bg-white border rounded-xl p-4 flex flex-wrap gap-3 items-end">
-      <label className="text-sm">Table number<input className="block border rounded-lg p-2.5 mt-1" type="number" min="1" value={num} onChange={e=>setNum(e.target.value)} placeholder="e.g. 1"/></label>
-      <label className="text-sm">Capacity<input className="block border rounded-lg p-2.5 mt-1" type="number" min="1" max="50" value={cap} onChange={e=>setCap(e.target.value)}/></label>
-      <button onClick={add} disabled={saving} className="bg-amber-500 text-white px-4 py-2.5 rounded-lg flex gap-2 items-center disabled:opacity-50"><Plus size={18}/>{saving?'Adding...':'Add Table'}</button>
-      <span className="text-xs text-gray-500 ml-auto">{tables.length}/{hotel?.max_tables||0} tables used</span>
+    <div className="bg-white border rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 lg:items-end">
+      <label className="text-sm w-full">Table number<input className="block w-full border rounded-lg p-2.5 mt-1" type="number" min="1" value={num} onChange={e=>setNum(e.target.value)} placeholder="e.g. 1"/></label>
+      <label className="text-sm w-full">Capacity<input className="block w-full border rounded-lg p-2.5 mt-1" type="number" min="1" max="50" value={cap} onChange={e=>setCap(e.target.value)}/></label>
+      <button onClick={add} disabled={saving} className="w-full lg:w-auto bg-amber-500 text-white px-4 py-2.5 rounded-lg flex gap-2 items-center justify-center disabled:opacity-50"><Plus size={18}/>{saving?'Adding...':'Add Table'}</button>
+      <span className="text-xs text-gray-500 sm:col-span-2 lg:col-span-1 lg:ml-auto">{tables.length}/{hotel?.max_tables||0} tables used</span>
     </div>
 
     <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
       {tables.map(table=>{
         const url=window.location.origin+'/#/customer/'+table.hotel_id+'?table='+encodeURIComponent(table.id)+'&token='+encodeURIComponent(table.qr_token);
-        return <div key={table.id} className="bg-white border rounded-xl p-5">
+        return <div key={table.id} className="bg-white border rounded-xl p-4 sm:p-5 min-w-0">
           <div className="flex justify-between gap-3">
             <div><h3 className="font-bold">Table {table.table_number}</h3><p className="text-sm text-gray-500">{table.capacity} seats • {table.status}</p></div>
             <button disabled={busyId===table.id} onClick={()=>rotate(table.id)} className="p-2 rounded-lg hover:bg-gray-100" title="Rotate QR token"><RefreshCw size={18} className={busyId===table.id?'animate-spin':''}/></button>
           </div>
-          <div className="flex justify-center my-4"><QRCodeSVG value={url} size={180}/></div>
+          <div className="flex justify-center my-4"><QRCodeSVG value={url} size={180} className="w-full max-w-[180px] h-auto"/></div>
           <p className="text-xs text-gray-400 break-all">{url}</p>
           <button onClick={()=>copy(url)} className="mt-3 w-full border rounded-lg py-2 text-sm flex items-center justify-center gap-2 hover:bg-gray-50"><Copy size={15}/>Copy Customer Link</button>
         </div>

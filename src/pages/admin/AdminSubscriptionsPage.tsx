@@ -20,20 +20,20 @@ export function AdminSubscriptionsPage(){
     finally{setSaving('')}
   };
 
-  return <div className="space-y-5">
-    <div className="flex items-center justify-between gap-3">
+  return <div className="space-y-4 sm:space-y-5 min-w-0">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div><h1 className="text-2xl font-bold">Subscriptions</h1><p className="text-sm text-gray-500">Change plans, renew access, and activate or deactivate hotels.</p></div>
-      <button onClick={load} className="px-4 py-2 border rounded-lg bg-white flex items-center gap-2"><RefreshCw size={16}/>Refresh</button>
+      <button onClick={load} className="w-full sm:w-auto px-4 py-2 border rounded-lg bg-white flex items-center justify-center gap-2"><RefreshCw size={16}/>Refresh</button>
     </div>
 
-    <div className="grid sm:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {PLANS.map((p,i)=><div key={p} className="bg-white border rounded-xl p-4"><b>{p}</b><p className="text-sm text-gray-500 mt-1">{['Free trial','₹499/month','₹999/month','₹1999/month'][i]}</p></div>)}
     </div>
 
     {error&&<div className="p-3 rounded-lg bg-red-50 text-red-700">{error}</div>}
     {loading?<div className="p-10 text-center text-gray-500">Loading...</div>:
     <div className="bg-white border rounded-xl overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full min-w-[760px] text-sm">
         <thead className="bg-gray-50"><tr><th className="text-left p-3">Hotel</th><th className="text-left p-3">Plan</th><th className="text-left p-3">Expiry</th><th className="text-left p-3">Usage</th><th className="text-left p-3">Renew</th><th className="text-left p-3">Status</th></tr></thead>
         <tbody>{rows.map(h=><tr key={h.id} className="border-t">
           <td className="p-3"><b>{h.name}</b><div className="text-xs text-gray-500">{h.owner?.email||'No owner'}</div></td>

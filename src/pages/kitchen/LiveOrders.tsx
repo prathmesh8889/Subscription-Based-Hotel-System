@@ -51,7 +51,7 @@ export function LiveOrders() {
     return (
       <div key={order.orderId} className="bg-white rounded-lg shadow-md p-4 border-l-4 border-amber-500">
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-gray-800">
               Table {order.tableNumber}
@@ -147,9 +147,9 @@ export function LiveOrders() {
   // ============================================================
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 min-w-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Live Orders</h1>
           <p className="text-sm text-gray-500">Real-time kitchen display</p>
@@ -163,7 +163,7 @@ export function LiveOrders() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-1">
             <AlertCircle size={20} className="text-yellow-600" />

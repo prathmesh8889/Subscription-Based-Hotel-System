@@ -81,15 +81,15 @@ export function CustomerQRMenu(){
 
   return <div className="min-h-screen bg-gray-50 pb-24">
     <header className="bg-white border-b sticky top-0 z-20">
-      <div className="max-w-3xl mx-auto p-4 flex justify-between items-center gap-3">
-        <div><h1 className="font-bold text-xl">{data?.hotel?.name}</h1><p className="text-sm text-gray-500">Table {data?.table?.tableNumber}</p></div>
-        <button onClick={()=>setView('orders')} className="relative px-3 py-2 border rounded-lg flex items-center gap-2 text-sm font-medium"><Receipt size={17}/>My Orders{orderIds.length>0&&<span className="bg-amber-500 text-white min-w-5 h-5 px-1 rounded-full text-xs grid place-items-center">{orderIds.length}</span>}</button>
+      <div className="max-w-3xl mx-auto p-3 sm:p-4 flex items-center justify-between gap-2 min-w-0">
+        <div className="min-w-0"><h1 className="font-bold text-base sm:text-xl truncate">{data?.hotel?.name}</h1><p className="text-sm text-gray-500">Table {data?.table?.tableNumber}</p></div>
+        <button onClick={()=>setView('orders')} className="relative shrink-0 px-2.5 sm:px-3 py-2 border rounded-lg flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium"><Receipt size={17}/>My Orders{orderIds.length>0&&<span className="bg-amber-500 text-white min-w-5 h-5 px-1 rounded-full text-xs grid place-items-center">{orderIds.length}</span>}</button>
       </div>
     </header>
 
-    <main className="max-w-3xl mx-auto p-4 space-y-3">
+    <main className="max-w-3xl mx-auto p-3 sm:p-4 space-y-3">
       {error&&<p className="p-3 bg-red-50 text-red-700 rounded">{error}</p>}
-      {menu.map((item:any)=><div key={item.id} className="bg-white border rounded-xl p-4 flex justify-between gap-4">
+      {menu.map((item:any)=><div key={item.id} className="bg-white border rounded-xl p-3 sm:p-4 flex items-start justify-between gap-3 min-w-0">
         <div><h3 className="font-semibold">{item.name}</h3><p className="text-sm text-gray-500">{item.description}</p><p className="font-bold mt-2">₹{Number(item.price).toFixed(0)}</p></div>
         <div className="flex items-center gap-2 self-center">
           {(cart[item.id]||0)>0&&<><button onClick={()=>changeQty(item.id,-1)} className="p-2 bg-gray-100 rounded-full"><Minus size={16}/></button><span>{cart[item.id]}</span></>}
@@ -98,6 +98,6 @@ export function CustomerQRMenu(){
       </div>)}
     </main>
 
-    {qty>0&&<div className="fixed bottom-0 inset-x-0 bg-white border-t p-4"><button onClick={placeOrder} disabled={placing} className="max-w-3xl mx-auto w-full p-3 rounded-xl bg-amber-500 text-white font-semibold flex justify-between"><span className="flex gap-2"><ShoppingCart size={18}/>{qty} items</span><span>{placing?'Placing...':'₹'+total.toFixed(0)+' • Place Order'}</span></button></div>}
+    {qty>0&&<div className="fixed bottom-0 inset-x-0 bg-white border-t p-3 sm:p-4 z-30"><button onClick={placeOrder} disabled={placing} className="max-w-3xl mx-auto w-full p-3 rounded-xl bg-amber-500 text-white font-semibold flex items-center justify-between gap-2 text-sm sm:text-base"><span className="flex gap-2"><ShoppingCart size={18}/>{qty} items</span><span>{placing?'Placing...':'₹'+total.toFixed(0)+' • Place Order'}</span></button></div>}
   </div>
 }

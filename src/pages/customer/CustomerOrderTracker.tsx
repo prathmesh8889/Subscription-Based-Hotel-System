@@ -70,19 +70,19 @@ export function CustomerOrderTracker({hotelId,tableId,token,hotelName,tableNumbe
 
   return <div className="min-h-screen bg-gray-50">
     <header className="bg-white border-b sticky top-0 z-20">
-      <div className="max-w-3xl mx-auto p-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="max-w-3xl mx-auto p-3 sm:p-4 flex items-center justify-between gap-2 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button onClick={onBack} className="p-2 rounded-lg hover:bg-gray-100"><ArrowLeft size={20}/></button>
-          <div><h1 className="font-bold text-lg">{hotelName||'My Orders'}</h1><p className="text-xs text-gray-500">Table {tableNumber} • Live order tracking</p></div>
+          <div className="min-w-0"><h1 className="font-bold text-base sm:text-lg truncate">{hotelName||'My Orders'}</h1><p className="text-xs text-gray-500">Table {tableNumber} • Live order tracking</p></div>
         </div>
-        <div className={"text-xs px-2.5 py-1.5 rounded-full flex items-center gap-1.5 "+(connected?'bg-green-50 text-green-700':'bg-amber-50 text-amber-700')}>
+        <div className={"shrink-0 text-[11px] sm:text-xs px-2 sm:px-2.5 py-1.5 rounded-full flex items-center gap-1.5 "+(connected?'bg-green-50 text-green-700':'bg-amber-50 text-amber-700')}>
           {connected?<Wifi size={14}/>:<WifiOff size={14}/>}
           {connected?'Live':'Syncing'}
         </div>
       </div>
     </header>
 
-    <main className="max-w-3xl mx-auto p-4 space-y-4">
+    <main className="max-w-3xl mx-auto p-3 sm:p-4 space-y-4">
       {error&&<div className="p-3 bg-red-50 text-red-700 rounded-lg">{error}</div>}
       {!sorted.length&&<div className="bg-white border rounded-xl p-10 text-center"><Receipt className="mx-auto text-gray-400 mb-3"/><h2 className="font-semibold">No orders yet</h2><p className="text-sm text-gray-500 mt-1">Place an order from the menu and it will appear here.</p><button onClick={onBack} className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg">Open Menu</button></div>}
 
@@ -93,7 +93,7 @@ export function CustomerOrderTracker({hotelId,tableId,token,hotelName,tableNumbe
         const StatusIcon=cancelled?XCircle:iconFor(status);
 
         return <section key={order.orderId||order.id} className="bg-white border rounded-2xl overflow-hidden shadow-sm">
-          <div className="p-5 border-b">
+          <div className="p-4 sm:p-5 border-b">
             <div className="flex flex-wrap justify-between gap-3">
               <div>
                 <p className="text-xs text-gray-500">Order</p>
@@ -116,7 +116,7 @@ export function CustomerOrderTracker({hotelId,tableId,token,hotelName,tableNumbe
             </div>}
           </div>
 
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <h3 className="font-semibold mb-3">Order Details</h3>
             <div className="space-y-3">
               {(order.items||[]).map((item:any,index:number)=><div key={item.menuItemId||index} className="flex justify-between gap-3">

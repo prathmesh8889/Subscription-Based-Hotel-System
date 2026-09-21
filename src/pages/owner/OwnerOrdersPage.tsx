@@ -32,7 +32,7 @@ export function OwnerOrdersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 min-w-0">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">All Orders</h1>
         <p className="text-sm text-gray-500">View and track all orders across your restaurant</p>
@@ -71,7 +71,7 @@ export function OwnerOrdersPage() {
       <div className="space-y-3">
         {filteredOrders.map(order => (
           <div key={order.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                   order.status === 'PENDING' ? 'bg-amber-100' :
@@ -89,7 +89,7 @@ export function OwnerOrdersPage() {
                   </p>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <p className="font-bold text-gray-800">₹{order.total_amount}</p>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                   order.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :

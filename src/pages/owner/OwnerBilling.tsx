@@ -73,7 +73,7 @@ export function OwnerBilling() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 min-w-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -86,8 +86,8 @@ export function OwnerBilling() {
       {paymentMessage && <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">{paymentMessage}</div>}
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
               <Clock size={20} className="text-red-600" />
@@ -98,7 +98,7 @@ export function OwnerBilling() {
           <p className="text-xs text-red-600 mt-1">{unpaidOrders.length} orders</p>
         </div>
 
-        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <CheckCircle size={20} className="text-green-600" />
@@ -109,7 +109,7 @@ export function OwnerBilling() {
           <p className="text-xs text-green-600 mt-1">{paidOrders.length} orders</p>
         </div>
 
-        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <IndianRupee size={20} className="text-blue-600" />
@@ -119,7 +119,7 @@ export function OwnerBilling() {
           <p className="text-xs text-gray-500 mt-1">Today's Collection</p>
         </div>
 
-        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
               <Receipt size={20} className="text-purple-600" />
@@ -132,7 +132,7 @@ export function OwnerBilling() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col lg:flex-row gap-3">
           <div className="relative flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -143,7 +143,7 @@ export function OwnerBilling() {
               className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-3 sm:flex gap-2">
             <button
               onClick={() => setFilterStatus('all')}
               className={`px-4 py-2 text-sm rounded-lg transition-colors ${
@@ -181,7 +181,7 @@ export function OwnerBilling() {
       {/* Orders List */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[760px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
@@ -285,7 +285,7 @@ export function OwnerBilling() {
       {/* Payment Collection Modal */}
       {selectedOrder && !showBillPreview && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
+          <div className="bg-white rounded-2xl w-full max-w-md p-4 sm:p-6 shadow-xl max-h-[92dvh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Collect Payment</h3>
               <button 
@@ -324,7 +324,7 @@ export function OwnerBilling() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select Payment Method
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     disabled={processingId === selectedOrder.id}
                     onClick={() => handleProcessPayment(selectedOrder.id, 'CASH')}
@@ -369,8 +369,8 @@ export function OwnerBilling() {
       {/* Bill Preview Modal */}
       {showBillPreview && selectedOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[92dvh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-lg font-semibold">Bill Preview</h3>
               <div className="flex items-center gap-2">
                 <button
@@ -392,7 +392,7 @@ export function OwnerBilling() {
               </div>
             </div>
 
-            <div className="p-6" id="bill-content">
+            <div className="p-4 sm:p-6" id="bill-content">
               {/* Bill Header */}
               <div className="text-center mb-6 pb-6 border-b-2 border-gray-800">
                 <h2 className="text-2xl font-bold text-gray-800">{user?.hotel?.name || 'Restaurant'}</h2>
